@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bus, Shield, Users, MapPin } from "lucide-react";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 const Index = () => {
   const modules = [
@@ -41,7 +42,12 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+        {/* Header con toggle de tema */}
+        <div className="flex justify-end mb-6">
+          <ThemeToggle />
+        </div>
+        
+        {/* Header principal */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-foreground mb-4">
             Sistema de Transporte Público

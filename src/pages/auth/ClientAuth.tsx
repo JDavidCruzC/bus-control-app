@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { Bus, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 const ClientAuth = () => {
   const [loginData, setLoginData] = useState({
@@ -109,6 +110,11 @@ const ClientAuth = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
       <div className="w-full max-w-md">
+        {/* Header con toggle de tema */}
+        <div className="flex justify-end mb-6">
+          <ThemeToggle />
+        </div>
+        
         <div className="mb-8 text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <div className="w-12 h-12 bg-primary text-primary-foreground rounded-lg flex items-center justify-center">

@@ -1,12 +1,18 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bus, MapPin, Clock, Users } from "lucide-react";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 const PublicRoutes = () => {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
+        {/* Header con toggle de tema */}
+        <div className="flex justify-end mb-6">
+          <ThemeToggle />
+        </div>
+        
+        {/* Header principal */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-4">
             Consulta de Rutas y Horarios
