@@ -6,19 +6,11 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 const Index = () => {
   const modules = [
     {
-      id: "auth",
-      title: "Sistema de Autenticación",
-      description: "Login y registro para administradores, conductores y clientes",
-      icon: Shield,
-      color: "bg-primary text-primary-foreground",
-      route: "/auth"
-    },
-    {
       id: "admin",
       title: "Dashboard Administrador", 
       description: "Gestión de vehículos, conductores, rutas y empresas",
       icon: Users,
-      color: "bg-secondary text-secondary-foreground",
+      color: "bg-primary text-primary-foreground",
       route: "/admin"
     },
     {
@@ -26,7 +18,7 @@ const Index = () => {
       title: "Interfaz Conductor",
       description: "Control de viajes, ubicación en tiempo real y reportes",
       icon: Bus,
-      color: "bg-accent text-accent-foreground", 
+      color: "bg-secondary text-secondary-foreground", 
       route: "/conductor"
     },
     {
@@ -34,7 +26,7 @@ const Index = () => {
       title: "Interfaz Pública",
       description: "Consulta de rutas, paraderos y ubicaciones en tiempo real",
       icon: MapPin,
-      color: "bg-muted text-muted-foreground",
+      color: "bg-accent text-accent-foreground",
       route: "/publico"
     }
   ];
@@ -62,7 +54,7 @@ const Index = () => {
         </div>
 
         {/* Modules Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {modules.map((module) => {
             const IconComponent = module.icon;
             return (
@@ -81,15 +73,14 @@ const Index = () => {
                     variant="outline" 
                     className="w-full"
                     onClick={() => {
-                      if (module.id === "auth") {
-                        // Mostrar opciones de autenticación
-                        const userType = prompt("Seleccione tipo de usuario:\n1. Trabajadores (admin/conductores)\n2. Clientes\n\nIngrese 1 o 2:");
-                        if (userType === "1") {
-                          window.location.href = "/auth/trabajadores";
-                        } else if (userType === "2") {
-                          window.location.href = "/auth/clientes";
-                        }
+                      if (module.id === "admin") {
+                        // Redirigir a login de trabajadores para administradores
+                        window.location.href = "/auth/trabajadores";
+                      } else if (module.id === "driver") {
+                        // Redirigir a login de trabajadores para conductores
+                        window.location.href = "/auth/trabajadores";
                       } else if (module.id === "public") {
+                        // La interfaz pública puede accederse directamente
                         window.location.href = "/publico";
                       } else {
                         alert(`Próximamente: ${module.title}`);
