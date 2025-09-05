@@ -5,10 +5,11 @@ import { supabase } from "@/integrations/supabase/client";
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  userType: 'trabajador' | 'cliente' | null;
+  userType: 'trabajador' | 'cliente' | 'conductor' | null;
   userData: any;
   loading: boolean;
   signInWorker: (email: string, password: string) => Promise<{ error: any }>;
+  signInConductor: (placa: string, password: string) => Promise<{ error: any }>;
   signInClient: (email: string, password: string) => Promise<{ error: any }>;
   signUpClient: (email: string, password: string, userData: any) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -19,7 +20,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [userType, setUserType] = useState<'trabajador' | 'cliente' | null>(null);
+  const [userType, setUserType] = useState<'trabajador' | 'cliente' | 'conductor' | null>(null);
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -42,7 +43,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Si no es trabajador, intentar obtener datos de cliente
+      // Intentar obtener datos de conductor
+      const { data: conductorData } = await supabase
+        .from('conductors')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (conductorData) {
+        setUserType('conductor');
+        setUserData(conductorData);
+        return;
+      }
+
+      // Si no es trabajador ni conductor, intentar obtener datos de cliente
       const { data: clienteData } = await supabase
         .from('clientes')
         .select('*')
@@ -108,6 +122,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   };
 
+  const signInConductor = async (placa: string, password: string) => {
+    try {
+      // Primero buscar el conductor por placa
+      const { data: conductorData, error: conductorError } = await supabase
+        .from('conductors')
+        .select('user_id, placa, nombre, apellido, estado')
+        .eq('placa', placa)
+        .eq('estado', 'activo')
+        .maybeSingle();
+
+      if (conductorError || !conductorData) {
+        return { error: { message: 'Placa no encontrada o conductor inactivo' } };
+      }
+
+      // Obtener el email del usuario de auth
+      const { data: userData, error: userError } = await supabase.auth.admin.getUserById(conductorData.user_id);
+      
+      if (userError || !userData.user?.email) {
+        return { error: { message: 'Error al obtener datos del usuario' } };
+      }
+
+      // Usar el email del conductor para autenticar
+      const { error } = await supabase.auth.signInWithPassword({
+        email: userData.user.email,
+        password
+      });
+
+      return { error };
+    } catch (error) {
+      return { error: { message: 'Error al iniciar sesión con placa' } };
+    }
+  };
+
   const signInClient = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -151,6 +198,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     userData,
     loading,
     signInWorker,
+    signInConductor,
     signInClient,
     signUpClient,
     signOut

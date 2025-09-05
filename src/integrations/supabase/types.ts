@@ -113,6 +113,42 @@ export type Database = {
           },
         ]
       }
+      conductors: {
+        Row: {
+          apellido: string
+          created_at: string
+          estado: string | null
+          id: string
+          nombre: string
+          placa: string
+          telefono: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          apellido: string
+          created_at?: string
+          estado?: string | null
+          id?: string
+          nombre: string
+          placa: string
+          telefono?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          apellido?: string
+          created_at?: string
+          estado?: string | null
+          id?: string
+          nombre?: string
+          placa?: string
+          telefono?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       configuraciones: {
         Row: {
           categoria: string | null
@@ -708,6 +744,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      authenticate_conductor: {
+        Args: { password_input: string; placa_input: string }
+        Returns: {
+          conductor_id: string
+          message: string
+          success: boolean
+          user_id: string
+        }[]
+      }
       get_current_user_empresa_id: {
         Args: Record<PropertyKey, never>
         Returns: string

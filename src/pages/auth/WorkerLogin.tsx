@@ -5,22 +5,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bus, ArrowLeft } from "lucide-react";
+import { Bus, ArrowLeft, Users, Truck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 const WorkerLogin = () => {
   const [email, setEmail] = useState("");
+  const [placa, setPlaca] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState("admin");
   
-  const { signInWorker } = useAuth();
+  const { signInWorker, signInConductor } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleAdminSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -36,10 +39,34 @@ const WorkerLogin = () => {
       });
     } else {
       toast({
-        title: "Bienvenido",
+        title: "Bienvenido Administrador",
         description: "Inicio de sesión exitoso",
       });
-      navigate("/");
+      navigate("/admin");
+    }
+    setLoading(false);
+  };
+
+  const handleConductorSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    const { error: signInError } = await signInConductor(placa, password);
+
+    if (signInError) {
+      setError("Credenciales incorrectas. Verifique su placa y contraseña.");
+      toast({
+        title: "Error de autenticación",
+        description: "Placa o contraseña incorrecta",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Bienvenido Conductor",
+        description: "Inicio de sesión exitoso",
+      });
+      navigate("/conductor");
     }
     setLoading(false);
   };
@@ -66,7 +93,7 @@ const WorkerLogin = () => {
           <CardHeader>
             <CardTitle>Iniciar Sesión</CardTitle>
             <CardDescription>
-              Acceso para administradores y conductores
+              Selecciona tu tipo de acceso
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -76,34 +103,80 @@ const WorkerLogin = () => {
               </Alert>
             )}
             
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="ejemplo@empresa.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="admin" className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Administrador
+                </TabsTrigger>
+                <TabsTrigger value="conductor" className="flex items-center gap-2">
+                  <Truck className="h-4 w-4" />
+                  Conductor
+                </TabsTrigger>
+              </TabsList>
               
-              <div className="space-y-2">
-                <Label htmlFor="password">Contraseña</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
+              <TabsContent value="admin" className="space-y-4 mt-4">
+                <form onSubmit={handleAdminSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="admin-email">Email Corporativo</Label>
+                    <Input
+                      id="admin-email"
+                      type="email"
+                      placeholder="admin@empresa.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="admin-password">Contraseña</Label>
+                    <Input
+                      id="admin-password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                  </div>
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
-              </Button>
-            </form>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "Verificando..." : "Acceder como Administrador"}
+                  </Button>
+                </form>
+              </TabsContent>
+              
+              <TabsContent value="conductor" className="space-y-4 mt-4">
+                <form onSubmit={handleConductorSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="placa">Placa del Vehículo</Label>
+                    <Input
+                      id="placa"
+                      type="text"
+                      placeholder="ABC-123"
+                      value={placa}
+                      onChange={(e) => setPlaca(e.target.value.toUpperCase())}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="conductor-password">Contraseña</Label>
+                    <Input
+                      id="conductor-password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "Verificando..." : "Acceder como Conductor"}
+                  </Button>
+                </form>
+              </TabsContent>
+            </Tabs>
 
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground mb-2">
