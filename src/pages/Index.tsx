@@ -75,8 +75,19 @@ const Index = () => {
                     variant="outline" 
                     className="w-full"
                     onClick={() => {
-                      // TODO: Implementar navegación cuando las rutas estén listas
-                      alert(`Navegando a ${module.title}`);
+                      if (module.id === "auth") {
+                        // Mostrar opciones de autenticación
+                        const userType = prompt("Seleccione tipo de usuario:\n1. Trabajadores (admin/conductores)\n2. Clientes\n\nIngrese 1 o 2:");
+                        if (userType === "1") {
+                          window.location.href = "/auth/trabajadores";
+                        } else if (userType === "2") {
+                          window.location.href = "/auth/clientes";
+                        }
+                      } else if (module.id === "public") {
+                        window.location.href = "/publico";
+                      } else {
+                        alert(`Próximamente: ${module.title}`);
+                      }
                     }}
                   >
                     Acceder

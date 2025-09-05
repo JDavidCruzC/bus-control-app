@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      clientes: {
+        Row: {
+          activo: boolean | null
+          apellido: string | null
+          cedula: string | null
+          created_at: string | null
+          email: string
+          fecha_registro: string | null
+          id: string
+          nombre: string
+          telefono: string | null
+          ultimo_login: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          activo?: boolean | null
+          apellido?: string | null
+          cedula?: string | null
+          created_at?: string | null
+          email: string
+          fecha_registro?: string | null
+          id?: string
+          nombre: string
+          telefono?: string | null
+          ultimo_login?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          activo?: boolean | null
+          apellido?: string | null
+          cedula?: string | null
+          created_at?: string | null
+          email?: string
+          fecha_registro?: string | null
+          id?: string
+          nombre?: string
+          telefono?: string | null
+          ultimo_login?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       conductores: {
         Row: {
           activo: boolean | null
