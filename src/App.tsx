@@ -11,6 +11,7 @@ import WorkerLogin from "./pages/auth/WorkerLogin";
 import ClientAuth from "./pages/auth/ClientAuth";
 import PublicRoutes from "./pages/PublicRoutes";
 import AdminIndex from "./pages/admin/AdminIndex";
+import ConductorIndex from "./pages/conductor/ConductorIndex";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
                 <Route path="/auth/clientes" element={<ClientAuth />} />
                 <Route path="/publico" element={<PublicRoutes />} />
                 <Route path="/admin/*" element={<AdminIndex />} />
+                <Route path="/conductor/*" element={<ConductorIndex />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

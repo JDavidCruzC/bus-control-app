@@ -124,28 +124,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInConductor = async (placa: string, password: string) => {
     try {
-      // Primero buscar el conductor por placa
-      const { data: conductorData, error: conductorError } = await supabase
-        .from('conductors')
-        .select('user_id, placa, nombre, apellido, estado')
-        .eq('placa', placa)
-        .eq('estado', 'activo')
-        .maybeSingle();
+      // Usar la función de base de datos para obtener el email por placa
+      const { data: conductorInfo, error: conductorError } = await supabase
+        .rpc('get_conductor_email_by_placa', { placa_input: placa });
 
-      if (conductorError || !conductorData) {
+      if (conductorError || !conductorInfo || conductorInfo.length === 0) {
         return { error: { message: 'Placa no encontrada o conductor inactivo' } };
       }
 
-      // Obtener el email del usuario de auth
-      const { data: userData, error: userError } = await supabase.auth.admin.getUserById(conductorData.user_id);
-      
-      if (userError || !userData.user?.email) {
-        return { error: { message: 'Error al obtener datos del usuario' } };
-      }
+      const email = conductorInfo[0].email;
 
       // Usar el email del conductor para autenticar
       const { error } = await supabase.auth.signInWithPassword({
-        email: userData.user.email,
+        email,
         password
       });
 

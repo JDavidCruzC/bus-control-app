@@ -753,6 +753,16 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_conductor_email_by_placa: {
+        Args: { placa_input: string }
+        Returns: {
+          apellido: string
+          conductor_id: string
+          email: string
+          nombre: string
+          user_id: string
+        }[]
+      }
       get_current_user_empresa_id: {
         Args: Record<PropertyKey, never>
         Returns: string
