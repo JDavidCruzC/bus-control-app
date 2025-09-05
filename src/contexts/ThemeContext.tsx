@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useTheme } from 'next-themes';
 
 interface ThemeSchedule {
   lightStart: string; // Formato HH:mm
@@ -7,16 +6,14 @@ interface ThemeSchedule {
   enabled: boolean;
 }
 
-interface ThemeContextType {
-  theme: string | undefined;
-  setTheme: (theme: string) => void;
+interface CustomThemeContextType {
   schedule: ThemeSchedule;
   updateSchedule: (schedule: ThemeSchedule) => void;
   isAutoMode: boolean;
   toggleAutoMode: () => void;
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const CustomThemeContext = createContext<CustomThemeContextType | undefined>(undefined);
 
 const DEFAULT_SCHEDULE: ThemeSchedule = {
   lightStart: '06:00',
@@ -24,8 +21,7 @@ const DEFAULT_SCHEDULE: ThemeSchedule = {
   enabled: false
 };
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const { theme, setTheme } = useTheme();
+export function CustomThemeProvider({ children }: { children: React.ReactNode }) {
   const [schedule, setSchedule] = useState<ThemeSchedule>(DEFAULT_SCHEDULE);
   const [isAutoMode, setIsAutoMode] = useState(false);
 
@@ -79,10 +75,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       const shouldBeInDarkMode = shouldBeDark(currentTime, schedule);
       const expectedTheme = shouldBeInDarkMode ? 'dark' : 'light';
       
-      if (theme !== expectedTheme) {
-        setTheme(expectedTheme);
-        console.log(`Auto theme change: ${expectedTheme} at ${currentTime}`);
+      // Aplicar el tema directamente al document
+      if (expectedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
       }
+      
+      console.log(`Auto theme change: ${expectedTheme} at ${currentTime}`);
     };
 
     // Verificar inmediatamente
@@ -92,7 +92,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const interval = setInterval(checkAndUpdateTheme, 60000);
 
     return () => clearInterval(interval);
-  }, [isAutoMode, schedule, theme, setTheme]);
+  }, [isAutoMode, schedule]);
 
   const updateSchedule = (newSchedule: ThemeSchedule) => {
     setSchedule(newSchedule);
@@ -103,10 +103,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       const now = new Date();
       const currentTime = now.toTimeString().slice(0, 5);
       const shouldBeInDarkMode = shouldBeDark(currentTime, newSchedule);
-      const expectedTheme = shouldBeInDarkMode ? 'dark' : 'light';
       
-      if (theme !== expectedTheme) {
-        setTheme(expectedTheme);
+      if (shouldBeInDarkMode) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
       }
     }
   };
@@ -121,17 +122,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       const now = new Date();
       const currentTime = now.toTimeString().slice(0, 5);
       const shouldBeInDarkMode = shouldBeDark(currentTime, schedule);
-      const expectedTheme = shouldBeInDarkMode ? 'dark' : 'light';
       
-      if (theme !== expectedTheme) {
-        setTheme(expectedTheme);
+      if (shouldBeInDarkMode) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
       }
     }
   };
 
   const value = {
-    theme,
-    setTheme,
     schedule,
     updateSchedule,
     isAutoMode,
@@ -139,16 +139,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={value}>
+    <CustomThemeContext.Provider value={value}>
       {children}
-    </ThemeContext.Provider>
+    </CustomThemeContext.Provider>
   );
 }
 
-export function useThemeContext() {
-  const context = useContext(ThemeContext);
+export function useCustomTheme() {
+  const context = useContext(CustomThemeContext);
   if (context === undefined) {
-    throw new Error('useThemeContext must be used within a ThemeProvider');
+    throw new Error('useCustomTheme must be used within a CustomThemeProvider');
   }
   return context;
 }

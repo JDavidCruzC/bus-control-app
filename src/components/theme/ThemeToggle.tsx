@@ -7,12 +7,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useThemeContext } from "@/contexts/ThemeContext";
+import { useTheme } from "next-themes";
+import { useCustomTheme } from "@/contexts/ThemeContext";
 import { useState } from "react";
 import { ThemeScheduleDialog } from "./ThemeScheduleDialog";
 
 export function ThemeToggle() {
-  const { theme, setTheme, isAutoMode, toggleAutoMode } = useThemeContext();
+  const { setTheme } = useTheme();
+  const { isAutoMode, toggleAutoMode } = useCustomTheme();
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
 
   return (

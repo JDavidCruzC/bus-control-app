@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useThemeContext } from "@/contexts/ThemeContext";
+import { useCustomTheme } from "@/contexts/ThemeContext";
 import { Sun, Moon, Clock } from "lucide-react";
 
 interface ThemeScheduleDialogProps {
@@ -20,7 +20,7 @@ interface ThemeScheduleDialogProps {
 }
 
 export function ThemeScheduleDialog({ open, onOpenChange }: ThemeScheduleDialogProps) {
-  const { schedule, updateSchedule } = useThemeContext();
+  const { schedule, updateSchedule } = useCustomTheme();
   const [localSchedule, setLocalSchedule] = useState(schedule);
 
   useEffect(() => {
