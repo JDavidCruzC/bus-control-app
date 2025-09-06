@@ -771,6 +771,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      setup_admin_user: {
+        Args: { email_param: string; user_id_param: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
