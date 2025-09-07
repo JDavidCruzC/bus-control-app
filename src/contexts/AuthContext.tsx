@@ -117,6 +117,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWorker = async (email: string, password: string) => {
     console.log('Intentando login con:', { email, password: password.length + ' caracteres' });
     
+    // Si es el admin por primera vez, crear el usuario
+    if (email === 'admin@sistema.com') {
+      try {
+        console.log('Verificando si admin existe...');
+        
+        // Intentar login primero
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        
+        // Si el login falla, crear el admin user
+        if (error && error.message.includes('Invalid login credentials')) {
+          console.log('Admin no existe, creando...');
+          
+          const response = await fetch(`https://kovmtspchvtcwysxibiy.supabase.co/functions/v1/setup-admin`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtvdm10c3BjaHZ0Y3d5c3hpYml5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwMTQ3NDEsImV4cCI6MjA3MjU5MDc0MX0.uzGqOSN-bykf140o-VPsKdv6-pBalxGqvEGJmRSPS4o`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          const result = await response.json();
+          console.log('Resultado creación admin:', result);
+          
+          if (result.success) {
+            // Ahora intentar login nuevamente
+            const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+              email,
+              password
+            });
+            console.log('Resultado del login después de crear admin:', { loginData, loginError });
+            return { error: loginError };
+          } else {
+            return { error: { message: result.error || 'Error creando admin' } };
+          }
+        }
+        
+        console.log('Resultado del login:', { data, error });
+        return { error };
+        
+      } catch (err) {
+        console.error('Error en signInWorker:', err);
+        return { error: { message: 'Error interno del servidor' } };
+      }
+    }
+    
+    // Para otros usuarios, login normal
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
