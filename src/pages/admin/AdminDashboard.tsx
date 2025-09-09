@@ -11,12 +11,16 @@ import {
   Settings,
   TrendingUp,
   Bus,
-  Clock
+  Clock,
+  AlertTriangle
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useStats } from "@/hooks/useStats";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function AdminDashboard() {
   const navigate = useNavigate();
+  const { stats, loading } = useStats();
 
   const quickActions = [
     {
@@ -49,11 +53,35 @@ export function AdminDashboard() {
     }
   ];
 
-  const stats = [
-    { label: "Buses Activos", value: "24", icon: Bus, trend: "+2" },
-    { label: "Conductores", value: "18", icon: UserCheck, trend: "+1" },
-    { label: "Rutas", value: "8", icon: Route, trend: "0" },
-    { label: "Paraderos", value: "156", icon: MapPin, trend: "+5" }
+  const dashboardStats = [
+    { 
+      label: "Buses Activos", 
+      value: loading ? "..." : stats.vehiculosActivos.toString(), 
+      total: loading ? "..." : stats.totalVehiculos.toString(),
+      icon: Bus, 
+      color: "text-primary" 
+    },
+    { 
+      label: "Conductores Activos", 
+      value: loading ? "..." : stats.conductoresActivos.toString(), 
+      total: loading ? "..." : stats.totalConductores.toString(),
+      icon: UserCheck, 
+      color: "text-secondary" 
+    },
+    { 
+      label: "Rutas Activas", 
+      value: loading ? "..." : stats.rutasActivas.toString(), 
+      total: loading ? "..." : stats.totalRutas.toString(),
+      icon: Route, 
+      color: "text-accent" 
+    },
+    { 
+      label: "Paraderos", 
+      value: loading ? "..." : stats.paraderosActivos.toString(), 
+      total: loading ? "..." : stats.totalParaderos.toString(),
+      icon: MapPin, 
+      color: "text-muted-foreground" 
+    }
   ];
 
   return (
@@ -68,24 +96,64 @@ export function AdminDashboard() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => (
+        {dashboardStats.map((stat) => (
           <Card key={stat.label}>
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">{stat.label}</p>
-                  <p className="text-2xl font-bold">{stat.value}</p>
-                  <div className="flex items-center gap-1 text-xs text-green-600">
-                    <TrendingUp className="h-3 w-3" />
-                    <span>{stat.trend}</span>
-                  </div>
+              {loading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-8 w-16" />
+                  <Skeleton className="h-3 w-12" />
                 </div>
-                <stat.icon className="h-8 w-8 text-muted-foreground" />
-              </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">{stat.label}</p>
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-2xl font-bold">{stat.value}</p>
+                      <p className="text-sm text-muted-foreground">/ {stat.total}</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {stat.label === "Buses Activos" && `${stats.viajesHoy} viajes hoy`}
+                      {stat.label === "Conductores Activos" && `En servicio`}
+                      {stat.label === "Rutas Activas" && `En operación`}
+                      {stat.label === "Paraderos" && `Habilitados`}
+                    </p>
+                  </div>
+                  <stat.icon className={`h-8 w-8 ${stat.color}`} />
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}
       </div>
+
+      {/* Alerts */}
+      {!loading && stats.reportesPendientes > 0 && (
+        <Card className="border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="h-5 w-5 text-yellow-600" />
+              <div>
+                <p className="font-medium text-yellow-800 dark:text-yellow-200">
+                  Reportes Pendientes
+                </p>
+                <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                  Tienes {stats.reportesPendientes} reportes pendientes de revisión
+                </p>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="ml-auto border-yellow-300 text-yellow-700 hover:bg-yellow-100"
+                onClick={() => navigate("/admin/reportes")}
+              >
+                Ver Reportes
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Quick Actions */}
       <div>

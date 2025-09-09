@@ -2,49 +2,50 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MapPin, Plus, Edit, Trash2, Navigation, Search, Filter } from "lucide-react";
-import { useParaderos, type Paradero } from "@/hooks/useParaderos";
-import { ParaderoDialog } from "@/components/admin/ParaderoDialog";
+import { Bus, Plus, Edit, Trash2, Search, Fuel, Settings } from "lucide-react";
+import { useVehiculos, type Vehiculo } from "@/hooks/useVehiculos";
+import { VehiculoDialog } from "@/components/admin/VehiculoDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function Paradero() {
-  const { paraderos, loading, deleteParadero } = useParaderos();
-  const [selectedParadero, setSelectedParadero] = useState<Paradero | null>(null);
+export function Vehiculos() {
+  const { vehiculos, loading, updateVehiculo } = useVehiculos();
+  const [selectedVehiculo, setSelectedVehiculo] = useState<Vehiculo | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<'all' | 'activo' | 'inactivo'>('all');
 
-  const filteredParaderos = paraderos.filter(paradero => {
-    const matchesSearch = paradero.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (paradero.direccion || '').toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredVehiculos = vehiculos.filter(vehiculo => {
+    const matchesSearch = vehiculo.placa.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (vehiculo.marca || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (vehiculo.numero_interno || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || 
-                         (statusFilter === 'activo' && paradero.activo) ||
-                         (statusFilter === 'inactivo' && !paradero.activo);
+                         (statusFilter === 'activo' && vehiculo.activo) ||
+                         (statusFilter === 'inactivo' && !vehiculo.activo);
     return matchesSearch && matchesStatus;
   });
 
   const stats = {
-    total: paraderos.length,
-    activos: paraderos.filter(p => p.activo).length,
-    inactivos: paraderos.filter(p => !p.activo).length,
-    conAsientos: paraderos.filter(p => p.tiene_asientos).length,
-    conTechado: paraderos.filter(p => p.tiene_techado).length,
+    total: vehiculos.length,
+    activos: vehiculos.filter(v => v.activo).length,
+    inactivos: vehiculos.filter(v => !v.activo).length,
+    conGps: vehiculos.filter(v => v.tiene_gps).length,
+    conAire: vehiculos.filter(v => v.tiene_aire).length,
   };
 
-  const handleEdit = (paradero: Paradero) => {
-    setSelectedParadero(paradero);
+  const handleEdit = (vehiculo: Vehiculo) => {
+    setSelectedVehiculo(vehiculo);
     setDialogOpen(true);
   };
 
   const handleNew = () => {
-    setSelectedParadero(null);
+    setSelectedVehiculo(null);
     setDialogOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    await deleteParadero(id);
+  const handleToggleStatus = async (vehiculo: Vehiculo) => {
+    await updateVehiculo(vehiculo.id, { activo: !vehiculo.activo });
   };
 
   return (
@@ -52,16 +53,16 @@ export function Paradero() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <MapPin className="h-6 w-6 text-primary" />
-            Gestión de Paraderos
+            <Bus className="h-6 w-6 text-primary" />
+            Gestión de Vehículos
           </h1>
           <p className="text-muted-foreground mt-1">
-            Administrar ubicaciones y estado de las paradas de autobús
+            Administrar la flota de vehículos de transporte
           </p>
         </div>
         <Button onClick={handleNew} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
-          Nuevo Paradero
+          Nuevo Vehículo
         </Button>
       </div>
 
@@ -71,7 +72,7 @@ export function Paradero() {
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar paraderos..."
+              placeholder="Buscar por placa, marca o número interno..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -136,21 +137,21 @@ export function Paradero() {
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-blue-600">{stats.conAsientos}</p>
-                <p className="text-sm text-muted-foreground">Con Asientos</p>
+                <p className="text-2xl font-bold text-blue-600">{stats.conGps}</p>
+                <p className="text-sm text-muted-foreground">Con GPS</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-purple-600">{stats.conTechado}</p>
-                <p className="text-sm text-muted-foreground">Techados</p>
+                <p className="text-2xl font-bold text-purple-600">{stats.conAire}</p>
+                <p className="text-sm text-muted-foreground">Con A/C</p>
               </CardContent>
             </Card>
           </>
         )}
       </div>
 
-      {/* Paraderos List */}
+      {/* Vehiculos List */}
       <div className="grid gap-4">
         {loading ? (
           Array.from({ length: 4 }).map((_, i) => (
@@ -164,41 +165,47 @@ export function Paradero() {
               </CardContent>
             </Card>
           ))
-        ) : filteredParaderos.length === 0 ? (
+        ) : filteredVehiculos.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center">
-              <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium">No hay paraderos</h3>
+              <Bus className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium">No hay vehículos</h3>
               <p className="text-muted-foreground">
                 {searchTerm || statusFilter !== 'all' 
-                  ? 'No se encontraron paraderos con los filtros aplicados'
-                  : 'Comienza agregando tu primer paradero'
+                  ? 'No se encontraron vehículos con los filtros aplicados'
+                  : 'Comienza registrando tu primer vehículo'
                 }
               </p>
             </CardContent>
           </Card>
         ) : (
-          filteredParaderos.map((paradero) => (
-            <Card key={paradero.id}>
+          filteredVehiculos.map((vehiculo) => (
+            <Card key={vehiculo.id}>
               <CardHeader className="pb-3">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <CardTitle className="text-lg">{paradero.nombre}</CardTitle>
-                      <Badge variant={paradero.activo ? "default" : "secondary"}>
-                        {paradero.activo ? "Activo" : "Inactivo"}
+                      <CardTitle className="text-lg">{vehiculo.placa}</CardTitle>
+                      {vehiculo.numero_interno && (
+                        <Badge variant="outline">#{vehiculo.numero_interno}</Badge>
+                      )}
+                      <Badge variant={vehiculo.activo ? "default" : "secondary"}>
+                        {vehiculo.activo ? "Activo" : "Inactivo"}
                       </Badge>
                     </div>
-                    <CardDescription className="flex items-center gap-1 mt-1">
-                      <Navigation className="h-3 w-3" />
-                      {paradero.direccion || 'Sin dirección'}
+                    <CardDescription className="mt-1">
+                      {vehiculo.marca && vehiculo.modelo ? `${vehiculo.marca} ${vehiculo.modelo}` : 'Sin información de marca/modelo'} 
+                      {vehiculo.año && ` (${vehiculo.año})`}
                     </CardDescription>
                     <div className="flex gap-2 mt-2">
-                      {paradero.tiene_asientos && (
-                        <Badge variant="outline" className="text-xs">Con Asientos</Badge>
+                      {vehiculo.tiene_gps && (
+                        <Badge variant="outline" className="text-xs">GPS</Badge>
                       )}
-                      {paradero.tiene_techado && (
-                        <Badge variant="outline" className="text-xs">Techado</Badge>
+                      {vehiculo.tiene_aire && (
+                        <Badge variant="outline" className="text-xs">A/C</Badge>
+                      )}
+                      {vehiculo.capacidad_pasajeros && (
+                        <Badge variant="outline" className="text-xs">{vehiculo.capacidad_pasajeros} asientos</Badge>
                       )}
                     </div>
                   </div>
@@ -207,16 +214,20 @@ export function Paradero() {
               <CardContent className="pt-0">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div className="text-sm text-muted-foreground">
-                    <p>Lat: {paradero.latitud.toFixed(6)}, Lng: {paradero.longitud.toFixed(6)}</p>
-                    {paradero.descripcion && (
-                      <p className="mt-1">{paradero.descripcion}</p>
-                    )}
+                    <div className="flex items-center gap-4">
+                      {vehiculo.color && (
+                        <span>Color: {vehiculo.color}</span>
+                      )}
+                      <span className="text-xs">
+                        Registrado: {new Date(vehiculo.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => handleEdit(paradero)}
+                      onClick={() => handleEdit(vehiculo)}
                     >
                       <Edit className="h-4 w-4 mr-1" />
                       Editar
@@ -224,35 +235,11 @@ export function Paradero() {
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => window.open(`https://www.google.com/maps?q=${paradero.latitud},${paradero.longitud}`, '_blank')}
+                      onClick={() => handleToggleStatus(vehiculo)}
                     >
-                      <MapPin className="h-4 w-4 mr-1" />
-                      Ver en Mapa
+                      <Settings className="h-4 w-4 mr-1" />
+                      {vehiculo.activo ? 'Desactivar' : 'Activar'}
                     </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>¿Eliminar paradero?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Esta acción no se puede deshacer. El paradero "{paradero.nombre}" será eliminado permanentemente.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction 
-                            onClick={() => handleDelete(paradero.id)}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          >
-                            Eliminar
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
                   </div>
                 </div>
               </CardContent>
@@ -261,10 +248,10 @@ export function Paradero() {
         )}
       </div>
 
-      <ParaderoDialog
+      <VehiculoDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        paradero={selectedParadero}
+        vehiculo={selectedVehiculo}
       />
     </div>
   );
