@@ -9,7 +9,7 @@ import { CustomThemeProvider } from "@/contexts/ThemeContext";
 import Index from "./pages/Index";
 import WorkerLogin from "./pages/auth/WorkerLogin";
 import ClientAuth from "./pages/auth/ClientAuth";
-import PublicRoutes from "./pages/PublicRoutes";
+import PublicIndex from "./pages/public/PublicIndex";
 import AdminIndex from "./pages/admin/AdminIndex";
 import ConductorIndex from "./pages/conductor/ConductorIndex";
 import NotFound from "./pages/NotFound";
@@ -29,7 +29,7 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/auth/trabajadores" element={<WorkerLogin />} />
                 <Route path="/auth/clientes" element={<ClientAuth />} />
-                <Route path="/publico" element={<PublicRoutes />} />
+                <Route path="/publico/*" element={<PublicIndex />} />
                 <Route path="/admin/*" element={<AdminIndex />} />
                 <Route path="/conductor/*" element={<ConductorIndex />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

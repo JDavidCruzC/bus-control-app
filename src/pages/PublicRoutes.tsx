@@ -1,7 +1,18 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bus, MapPin, Clock, Users } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { Link } from "react-router-dom";
+import { 
+  MapPin, 
+  Clock, 
+  Users, 
+  Car,
+  Route,
+  Navigation,
+  Phone,
+  AlertTriangle
+} from "lucide-react";
 
 const PublicRoutes = () => {
   return (
@@ -27,7 +38,7 @@ const PublicRoutes = () => {
           <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
-                <Bus className="h-5 w-5 text-primary" />
+                <Car className="h-5 w-5 text-primary" />
                 <CardTitle className="text-lg">Rutas Activas</CardTitle>
               </div>
             </CardHeader>
@@ -83,7 +94,7 @@ const PublicRoutes = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Bus className="h-6 w-6" />
+                <Route className="h-6 w-6" />
                 Consultar Rutas
               </CardTitle>
               <CardDescription>
@@ -91,14 +102,17 @@ const PublicRoutes = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button className="w-full" variant="outline">
-                Ver Mapa de Rutas
+              <Button size="lg" className="w-full sm:w-auto" asChild>
+                <Link to="/publico/rutas">
+                  <Route className="mr-2 h-5 w-5" />
+                  Ver Todas las Rutas
+                </Link>
               </Button>
-              <Button className="w-full" variant="outline">
-                Buscar por Destino
-              </Button>
-              <Button className="w-full" variant="outline">
-                Horarios y Frecuencias
+              <Button variant="outline" size="lg" className="w-full sm:w-auto" asChild>
+                <Link to="/publico/rutas">
+                  <MapPin className="mr-2 h-5 w-5" />
+                  Buscar Paradero
+                </Link>
               </Button>
             </CardContent>
           </Card>
@@ -115,14 +129,17 @@ const PublicRoutes = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button className="w-full" variant="outline">
-                Rastrear Vehículo
+              <Button size="lg" className="w-full sm:w-auto" asChild>
+                <Link to="/publico/ubicacion">
+                  <Navigation className="mr-2 h-5 w-5" />
+                  Ver Mapa en Vivo
+                </Link>
               </Button>
-              <Button className="w-full" variant="outline">
-                Paraderos Cercanos
-              </Button>
-              <Button className="w-full" variant="outline">
-                Tiempos de Llegada
+              <Button variant="outline" size="lg" className="w-full sm:w-auto" asChild>
+                <Link to="/publico/ubicacion">
+                  <Clock className="mr-2 h-5 w-5" />
+                  Tiempos de Llegada
+                </Link>
               </Button>
             </CardContent>
           </Card>
