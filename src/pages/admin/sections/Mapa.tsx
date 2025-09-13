@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import MapboxMap from "@/components/MapboxMap";
 
 export function Mapa() {
   const [selectedLayer, setSelectedLayer] = useState("vehiculos");
@@ -143,18 +144,8 @@ export function Mapa() {
               </div>
             </CardHeader>
             <CardContent>
-              {/* Placeholder del mapa - aquí iría el componente Mapbox */}
-              <div className="w-full h-96 bg-muted rounded-lg flex items-center justify-center border-2 border-dashed border-muted-foreground/25">
-                <div className="text-center space-y-2">
-                  <MapPin className="h-12 w-12 text-muted-foreground mx-auto" />
-                  <h3 className="text-lg font-semibold text-muted-foreground">Mapa en Tiempo Real</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Aquí se mostraría el mapa interactivo con las ubicaciones en tiempo real
-                  </p>
-                  <Button variant="outline" className="mt-4">
-                    Configurar Mapbox Token
-                  </Button>
-                </div>
+              <div className="w-full h-96 rounded-lg overflow-hidden">
+                <MapboxMap selectedLayer={selectedLayer} isRealTime={isRealTime} />
               </div>
             </CardContent>
           </Card>
