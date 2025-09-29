@@ -3,6 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { Link } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+import { useEmpresas } from "@/hooks/useEmpresas";
+import { useRutasPublicas } from "@/hooks/useRutasPublicas";
 import { 
   MapPin, 
   Clock, 
@@ -11,10 +14,13 @@ import {
   Route,
   Navigation,
   Phone,
-  AlertTriangle
+  AlertTriangle,
+  Building2
 } from "lucide-react";
 
 const PublicRoutes = () => {
+  const { empresas, loading: loadingEmpresas } = useEmpresas();
+  const { rutas, loading: loadingRutas } = useRutasPublicas();
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-6xl mx-auto">
@@ -38,13 +44,26 @@ const PublicRoutes = () => {
           <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-primary" />
+                <CardTitle className="text-lg">Empresas</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-primary">{loadingEmpresas ? "..." : empresas.length}</p>
+              <CardDescription>Operando en el sistema</CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
                 <Car className="h-5 w-5 text-primary" />
                 <CardTitle className="text-lg">Rutas Activas</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-primary">12</p>
-              <CardDescription>Rutas en operación</CardDescription>
+              <p className="text-2xl font-bold text-primary">{loadingRutas ? "..." : rutas.length}</p>
+              <CardDescription>En toda la ciudad</CardDescription>
             </CardContent>
           </Card>
 
@@ -87,6 +106,49 @@ const PublicRoutes = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Empresas Disponibles */}
+        {empresas.length > 0 && (
+          <div className="mb-12">
+            <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2">
+              <Building2 className="h-6 w-6" />
+              Empresas de Transporte
+            </h2>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {empresas.map((empresa) => (
+                <Card key={empresa.id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      {empresa.logo_url ? (
+                        <img 
+                          src={empresa.logo_url} 
+                          alt={empresa.nombre}
+                          className="h-8 w-8 object-contain rounded"
+                        />
+                      ) : (
+                        <Building2 className="h-6 w-6" />
+                      )}
+                      {empresa.nombre}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 text-sm text-muted-foreground">
+                      {empresa.telefono && (
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4" />
+                          {empresa.telefono}
+                        </div>
+                      )}
+                      <Badge variant="outline" className="mt-2">
+                        {rutas.filter(r => r.empresa_id === empresa.id).length} rutas
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Main Features */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

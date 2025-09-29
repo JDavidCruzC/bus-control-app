@@ -18,6 +18,12 @@ export type UbicacionTiempoReal = {
     placa: string;
     marca: string | null;
     modelo: string | null;
+    empresa_id: string | null;
+    empresa?: {
+      id: string;
+      nombre: string;
+      logo_url: string | null;
+    };
   };
 };
 
@@ -61,10 +67,21 @@ export function useUbicacionesTiempoReal() {
           .select('id, nombre, apellido, placa')
           .in('id', conductorIds);
 
-        // Obtener datos de vehículos  
+        // Obtener datos de vehículos con empresa
         const { data: vehiculosData } = await supabase
           .from('vehiculos')
-          .select('id, placa, marca, modelo')
+          .select(`
+            id, 
+            placa, 
+            marca, 
+            modelo,
+            empresa_id,
+            empresa:empresas(
+              id,
+              nombre,
+              logo_url
+            )
+          `)
           .in('id', vehiculoIds);
 
         // Combinar datos

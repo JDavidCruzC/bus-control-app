@@ -5,12 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "react-router-dom";
 import { useRutasPublicas } from "@/hooks/useRutasPublicas";
-import { Search, MapPin, Clock, DollarSign, Route } from "lucide-react";
+import { useEmpresas } from "@/hooks/useEmpresas";
+import { Search, MapPin, Clock, DollarSign, Route, Building2 } from "lucide-react";
 
 export default function ConsultarRutas() {
-  const { rutas, loading, error } = useRutasPublicas();
+  const [empresaSeleccionada, setEmpresaSeleccionada] = useState<string | null>(null);
+  const { empresas } = useEmpresas();
+  const { rutas, loading, error } = useRutasPublicas(empresaSeleccionada);
   const [searchTerm, setSearchTerm] = useState("");
 
   const rutasFiltradas = rutas.filter(ruta => 
@@ -66,17 +70,33 @@ export default function ConsultarRutas() {
           </p>
         </div>
 
-        {/* Buscador */}
+        {/* Filtros */}
         <Card>
           <CardContent className="pt-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por código, nombre o descripción de ruta..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Select value={empresaSeleccionada || "todas"} onValueChange={(value) => setEmpresaSeleccionada(value === "todas" ? null : value)}>
+                <SelectTrigger className="w-full sm:w-[280px]">
+                  <SelectValue placeholder="Filtrar por empresa" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todas">Todas las empresas</SelectItem>
+                  {empresas.map((empresa) => (
+                    <SelectItem key={empresa.id} value={empresa.id}>
+                      {empresa.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por código, nombre o descripción..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -151,7 +171,13 @@ export default function ConsultarRutas() {
                 <Card key={ruta.id} className="overflow-hidden">
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <div>
+                      <div className="flex-1">
+                        {ruta.empresa && (
+                          <Badge variant="secondary" className="gap-1 mb-2">
+                            <Building2 className="h-3 w-3" />
+                            {ruta.empresa.nombre}
+                          </Badge>
+                        )}
                         <CardTitle className="flex items-center gap-2">
                           <Badge variant="outline">{ruta.codigo}</Badge>
                           {ruta.nombre}

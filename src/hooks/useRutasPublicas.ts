@@ -9,6 +9,13 @@ export type RutaPublica = {
   distancia_km: number | null;
   tiempo_estimado_minutos: number | null;
   precio: number | null;
+  empresa_id: string | null;
+  empresa?: {
+    id: string;
+    nombre: string;
+    logo_url: string | null;
+    telefono: string | null;
+  };
   paraderos: Array<{
     id: string;
     nombre: string;
@@ -18,7 +25,7 @@ export type RutaPublica = {
   }>;
 };
 
-export function useRutasPublicas() {
+export function useRutasPublicas(empresaId?: string | null) {
   const [rutas, setRutas] = useState<RutaPublica[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,8 +35,8 @@ export function useRutasPublicas() {
       setLoading(true);
       setError(null);
 
-      // Obtener rutas con sus paraderos
-      const { data: rutasData, error: rutasError } = await supabase
+      // Obtener rutas con sus paraderos y empresa
+      let query = supabase
         .from('rutas')
         .select(`
           id,
@@ -38,10 +45,23 @@ export function useRutasPublicas() {
           descripcion,
           distancia_km,
           tiempo_estimado_minutos,
-          precio
+          precio,
+          empresa_id,
+          empresa:empresas(
+            id,
+            nombre,
+            logo_url,
+            telefono
+          )
         `)
-        .eq('activo', true)
-        .order('codigo');
+        .eq('activo', true);
+
+      // Filtrar por empresa si se proporciona
+      if (empresaId) {
+        query = query.eq('empresa_id', empresaId);
+      }
+
+      const { data: rutasData, error: rutasError } = await query.order('codigo');
 
       if (rutasError) throw rutasError;
 
@@ -94,7 +114,7 @@ export function useRutasPublicas() {
 
   useEffect(() => {
     fetchRutas();
-  }, []);
+  }, [empresaId]);
 
   return {
     rutas,
