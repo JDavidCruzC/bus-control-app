@@ -199,11 +199,14 @@ export type Database = {
           created_at: string | null
           direccion: string | null
           email: string | null
+          estado_membresia: string | null
+          fecha_vencimiento_membresia: string | null
           id: string
           logo_url: string | null
           nombre: string
           ruc: string | null
           telefono: string | null
+          tipo_plan: string | null
           updated_at: string | null
         }
         Insert: {
@@ -211,11 +214,14 @@ export type Database = {
           created_at?: string | null
           direccion?: string | null
           email?: string | null
+          estado_membresia?: string | null
+          fecha_vencimiento_membresia?: string | null
           id?: string
           logo_url?: string | null
           nombre: string
           ruc?: string | null
           telefono?: string | null
+          tipo_plan?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -223,14 +229,121 @@ export type Database = {
           created_at?: string | null
           direccion?: string | null
           email?: string | null
+          estado_membresia?: string | null
+          fecha_vencimiento_membresia?: string | null
           id?: string
           logo_url?: string | null
           nombre?: string
           ruc?: string | null
           telefono?: string | null
+          tipo_plan?: string | null
           updated_at?: string | null
         }
         Relationships: []
+      }
+      membresias: {
+        Row: {
+          auto_renovacion: boolean | null
+          created_at: string | null
+          empresa_id: string | null
+          estado: string | null
+          fecha_fin: string
+          fecha_inicio: string
+          id: string
+          precio: number
+          tipo_plan: string
+          updated_at: string | null
+        }
+        Insert: {
+          auto_renovacion?: boolean | null
+          created_at?: string | null
+          empresa_id?: string | null
+          estado?: string | null
+          fecha_fin: string
+          fecha_inicio?: string
+          id?: string
+          precio: number
+          tipo_plan: string
+          updated_at?: string | null
+        }
+        Update: {
+          auto_renovacion?: boolean | null
+          created_at?: string | null
+          empresa_id?: string | null
+          estado?: string | null
+          fecha_fin?: string
+          fecha_inicio?: string
+          id?: string
+          precio?: number
+          tipo_plan?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membresias_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pagos: {
+        Row: {
+          created_at: string | null
+          descripcion: string | null
+          empresa_id: string | null
+          estado: string | null
+          fecha_pago: string | null
+          id: string
+          membresia_id: string | null
+          metodo_pago: string | null
+          monto: number
+          referencia_pago: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          descripcion?: string | null
+          empresa_id?: string | null
+          estado?: string | null
+          fecha_pago?: string | null
+          id?: string
+          membresia_id?: string | null
+          metodo_pago?: string | null
+          monto: number
+          referencia_pago?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          descripcion?: string | null
+          empresa_id?: string | null
+          estado?: string | null
+          fecha_pago?: string | null
+          id?: string
+          membresia_id?: string | null
+          metodo_pago?: string | null
+          monto?: number
+          referencia_pago?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagos_membresia_id_fkey"
+            columns: ["membresia_id"]
+            isOneToOne: false
+            referencedRelation: "membresias"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       paraderos: {
         Row: {

@@ -12,6 +12,11 @@ import ClientAuth from "./pages/auth/ClientAuth";
 import PublicIndex from "./pages/public/PublicIndex";
 import AdminIndex from "./pages/admin/AdminIndex";
 import ConductorIndex from "./pages/conductor/ConductorIndex";
+import SuperAdminIndex from "./pages/superadmin/SuperAdminIndex";
+import EmpresaAuth from "./pages/empresa/EmpresaAuth";
+import PublicRoutes from "./pages/PublicRoutes";
+import ConsultarRutas from "./pages/public/ConsultarRutas";
+import UbicacionTiempoReal from "./pages/public/UbicacionTiempoReal";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,7 +36,12 @@ const App = () => (
                 <Route path="/auth/clientes" element={<ClientAuth />} />
                 <Route path="/publico/*" element={<PublicIndex />} />
                 <Route path="/admin/*" element={<AdminIndex />} />
+                <Route path="/superadmin/*" element={<SuperAdminIndex />} />
+                <Route path="/empresa/auth" element={<EmpresaAuth />} />
                 <Route path="/conductor/*" element={<ConductorIndex />} />
+                <Route path="/rutas-publicas" element={<PublicRoutes />} />
+                <Route path="/consultar-rutas" element={<ConsultarRutas />} />
+                <Route path="/ubicacion-tiempo-real" element={<UbicacionTiempoReal />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

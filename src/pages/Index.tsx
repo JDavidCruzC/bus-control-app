@@ -1,108 +1,69 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bus, Shield, Users, MapPin } from "lucide-react";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { useNavigate } from "react-router-dom";
+import { Bus, MapPin, Clock, Building2, ShieldCheck } from "lucide-react";
 
 const Index = () => {
-  const modules = [
-    {
-      id: "admin",
-      title: "Dashboard Administrador", 
-      description: "Gestión de vehículos, conductores, rutas y empresas",
-      icon: Users,
-      color: "bg-primary text-primary-foreground",
-      route: "/admin"
-    },
-    {
-      id: "driver",
-      title: "Interfaz Conductor",
-      description: "Control de viajes, ubicación en tiempo real y reportes",
-      icon: Bus,
-      color: "bg-secondary text-secondary-foreground", 
-      route: "/conductor"
-    },
-    {
-      id: "public",
-      title: "Interfaz Pública",
-      description: "Consulta de rutas, paraderos y ubicaciones en tiempo real",
-      icon: MapPin,
-      color: "bg-accent text-accent-foreground",
-      route: "/publico"
-    }
-  ];
+  const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header con toggle de tema */}
-        <div className="flex justify-end mb-6">
-          <ThemeToggle />
-        </div>
-        
-        {/* Header principal */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-foreground mb-4">
-            Sistema de Transporte Público
-          </h1>
-          <p className="text-xl text-muted-foreground mb-2">
-            Bahía del Sur - Plataforma Integral de Gestión
-          </p>
-          <div className="flex items-center justify-center gap-2 text-muted-foreground">
-            <Bus className="h-5 w-5" />
-            <span>Conectando tu ciudad</span>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
+      <div className="max-w-4xl w-full space-y-8">
+        <div className="text-center space-y-4">
+          <div className="flex justify-center mb-4">
+            <Bus className="h-16 w-16 text-primary" />
           </div>
+          <h1 className="text-4xl font-bold">Sistema Multi-Empresa de Transporte</h1>
+          <p className="text-xl text-muted-foreground">
+            Plataforma integral para gestión de múltiples empresas de buses
+          </p>
         </div>
 
-        {/* Modules Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {modules.map((module) => {
-            const IconComponent = module.icon;
-            return (
-              <Card key={module.id} className="hover:shadow-lg transition-shadow duration-300">
-                <CardHeader className="text-center pb-4">
-                  <div className={`w-16 h-16 mx-auto rounded-lg flex items-center justify-center ${module.color} mb-4`}>
-                    <IconComponent className="h-8 w-8" />
-                  </div>
-                  <CardTitle className="text-lg">{module.title}</CardTitle>
-                  <CardDescription className="text-sm">
-                    {module.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => {
-                      if (module.id === "admin") {
-                        // Redirigir a login de trabajadores para administradores
-                        window.location.href = "/auth/trabajadores";
-                      } else if (module.id === "driver") {
-                        // Redirigir a login de trabajadores para conductores
-                        window.location.href = "/auth/trabajadores";
-                      } else if (module.id === "public") {
-                        // La interfaz pública puede accederse directamente
-                        window.location.href = "/publico";
-                      } else {
-                        alert(`Próximamente: ${module.title}`);
-                      }
-                    }}
-                  >
-                    Acceder
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
+        <div className="flex flex-wrap gap-4 justify-center">
+          <Button size="lg" onClick={() => navigate("/rutas-publicas")}>
+            <MapPin className="mr-2 h-4 w-4" />
+            Ver Rutas Disponibles
+          </Button>
+          <Button size="lg" variant="outline" onClick={() => navigate("/empresa/auth")}>
+            <Building2 className="mr-2 h-4 w-4" />
+            Portal Empresas
+          </Button>
+          <Button size="lg" variant="outline" onClick={() => navigate("/superadmin")}>
+            <ShieldCheck className="mr-2 h-4 w-4" />
+            Super Admin
+          </Button>
+          <Button size="lg" variant="outline" onClick={() => navigate("/auth/trabajadores")}>
+            Acceso Trabajadores
+          </Button>
         </div>
 
-        {/* Info Section */}
-        <div className="mt-16 text-center">
-          <Card className="max-w-2xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 mt-8">
+          <Card>
             <CardHeader>
-              <CardTitle>Sobre el Sistema</CardTitle>
+              <MapPin className="h-8 w-8 text-primary mb-2" />
+              <CardTitle>Rutas Públicas</CardTitle>
               <CardDescription>
-                Plataforma completa para la gestión de transporte público con seguimiento en tiempo real,
-                gestión de rutas, control de flota y atención al cliente.
+                Consulta todas las rutas disponibles de todas las empresas
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <Building2 className="h-8 w-8 text-primary mb-2" />
+              <CardTitle>Portal Empresas</CardTitle>
+              <CardDescription>
+                Registra tu empresa y gestiona tus rutas y vehículos
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <Clock className="h-8 w-8 text-primary mb-2" />
+              <CardTitle>Tiempo Real</CardTitle>
+              <CardDescription>
+                Ubicación en vivo de todos los buses del sistema
               </CardDescription>
             </CardHeader>
           </Card>

@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -8,29 +8,34 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import {
   MapPin,
   Map,
-  Eye,
+  Activity,
   Users,
   UserCheck,
-  Route,
-  FileBarChart,
+  Bus,
+  FileText,
   Settings,
+  LogOut,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const controlItems = [
   { title: "Paradero", url: "/admin/paradero", icon: MapPin },
   { title: "Mapa", url: "/admin/mapa", icon: Map },
-  { title: "MIRA", url: "/admin/mira", icon: Eye },
+  { title: "MIRA", url: "/admin/mira", icon: Activity },
 ];
 
 const adminItems = [
   { title: "Trabajadores", url: "/admin/trabajadores", icon: Users },
   { title: "Conductores", url: "/admin/conductores", icon: UserCheck },
-  { title: "Rutas", url: "/admin/rutas", icon: Route },
-  { title: "Reportes", url: "/admin/reportes", icon: FileBarChart },
+  { title: "Vehículos", url: "/admin/vehiculos", icon: Bus },
+  { title: "Rutas", url: "/admin/rutas", icon: FileText },
+  { title: "Reportes", url: "/admin/reportes", icon: FileText },
 ];
 
 const optionItems = [
@@ -39,18 +44,35 @@ const optionItems = [
 
 export function AdminSidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const currentPath = location.pathname;
 
-  const isActive = (path: string) => currentPath === path;
+  const isActive = (path: string) => {
+    if (path === "/admin") {
+      return currentPath === path;
+    }
+    return currentPath.startsWith(path);
+  };
+
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
-    isActive ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium" : "hover:bg-sidebar-accent/50";
+    isActive ? "bg-accent text-accent-foreground" : "";
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast({
+      title: "Sesión cerrada",
+      description: "Has cerrado sesión exitosamente",
+    });
+    navigate("/");
+  };
 
   const renderMenuItems = (items: any[]) =>
     items.map((item) => (
       <SidebarMenuItem key={item.title}>
         <SidebarMenuButton asChild>
-          <NavLink to={item.url} className={getNavCls}>
-            <item.icon className="h-4 w-4" />
+          <NavLink to={item.url} end={item.url === "/admin"} className={getNavCls}>
+            <item.icon />
             <span>{item.title}</span>
           </NavLink>
         </SidebarMenuButton>
@@ -59,12 +81,11 @@ export function AdminSidebar() {
 
   return (
     <Sidebar collapsible="icon">
+      <SidebarTrigger className="m-2" />
+      
       <SidebarContent>
-        {/* Control Section */}
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Control
-          </SidebarGroupLabel>
+          <SidebarGroupLabel>Control</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {renderMenuItems(controlItems)}
@@ -72,11 +93,8 @@ export function AdminSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Administration Section */}
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Administración
-          </SidebarGroupLabel>
+          <SidebarGroupLabel>Administración</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {renderMenuItems(adminItems)}
@@ -84,14 +102,17 @@ export function AdminSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Options Section */}
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Opciones
-          </SidebarGroupLabel>
+          <SidebarGroupLabel>Opciones</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {renderMenuItems(optionItems)}
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={handleLogout}>
+                  <LogOut />
+                  <span>Cerrar Sesión</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

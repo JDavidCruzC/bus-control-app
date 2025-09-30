@@ -9,6 +9,9 @@ export type Empresa = {
   telefono: string | null;
   email: string | null;
   activo: boolean;
+  estado_membresia?: string;
+  fecha_vencimiento_membresia?: string;
+  tipo_plan?: string;
 };
 
 export function useEmpresas() {
@@ -23,7 +26,7 @@ export function useEmpresas() {
 
       const { data, error: fetchError } = await supabase
         .from('empresas')
-        .select('id, nombre, ruc, logo_url, telefono, email, activo')
+        .select('id, nombre, ruc, logo_url, telefono, email, activo, estado_membresia, fecha_vencimiento_membresia, tipo_plan')
         .eq('activo', true)
         .order('nombre');
 
