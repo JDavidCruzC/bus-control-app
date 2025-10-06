@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Building2 } from "lucide-react";
+import { loginSchema, registrationSchema } from "@/lib/validations/auth";
 
 export default function EmpresaAuth() {
   const [loading, setLoading] = useState(false);
@@ -61,10 +62,27 @@ export default function EmpresaAuth() {
     setLoading(true);
 
     try {
-      // Crear cuenta de auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // Validate input
+      const validation = registrationSchema.safeParse({
         email: registerData.email,
         password: registerData.password,
+        nombre: registerData.nombre,
+        ruc: registerData.ruc,
+        telefono: registerData.telefono,
+      });
+
+      if (!validation.success) {
+        const firstError = validation.error.errors[0];
+        throw new Error(firstError.message);
+      }
+
+      // Crear cuenta de auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: validation.data.email,
+        password: validation.data.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+        },
       });
 
       if (authError) throw authError;
@@ -75,11 +93,11 @@ export default function EmpresaAuth() {
       const { data: empresaData, error: empresaError } = await supabase
         .from('empresas')
         .insert([{
-          nombre: registerData.nombre,
-          ruc: registerData.ruc,
-          telefono: registerData.telefono,
-          email: registerData.email,
-          estado_membresia: 'prueba',
+          nombre: validation.data.nombre,
+          ruc: validation.data.ruc,
+          telefono: validation.data.telefono,
+          email: validation.data.email,
+          estado_membresia: 'trial',
           tipo_plan: 'basico',
           fecha_vencimiento_membresia: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         }])
@@ -102,8 +120,8 @@ export default function EmpresaAuth() {
         .from('usuarios')
         .insert([{
           id: authData.user.id,
-          email: registerData.email,
-          nombre: registerData.nombre,
+          email: validation.data.email,
+          nombre: validation.data.nombre,
           empresa_id: empresaData.id,
           rol_id: rolData.id,
           activo: true,
@@ -113,7 +131,7 @@ export default function EmpresaAuth() {
 
       toast({
         title: "Registro exitoso",
-        description: "Tu cuenta ha sido creada con 7 días de prueba gratuita",
+        description: "Tu cuenta ha sido creada. Tienes 7 días de prueba gratuita.",
       });
 
       navigate("/admin");

@@ -73,9 +73,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUserType(null);
       setUserData(null);
     } catch (error) {
-      console.error('Error fetching user data:', error);
       setUserType(null);
       setUserData(null);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -115,13 +116,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signInWorker = async (email: string, password: string) => {
-    console.log('Intentando login con:', { email, password: password.length + ' caracteres' });
-    
     // Si es el admin por primera vez, crear el usuario
     if (email === 'admin@sistema.com') {
       try {
-        console.log('Verificando si admin existe...');
-        
         // Intentar login primero
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
@@ -130,8 +127,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         // Si el login falla, crear el admin user
         if (error && error.message.includes('Invalid login credentials')) {
-          console.log('Admin no existe, creando...');
-          
           const response = await fetch(`https://kovmtspchvtcwysxibiy.supabase.co/functions/v1/setup-admin`, {
             method: 'POST',
             headers: {
@@ -141,37 +136,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
           
           const result = await response.json();
-          console.log('Resultado creación admin:', result);
           
-          if (result.success) {
-            // Ahora intentar login nuevamente
-            const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+          if (result.success && result.temporaryPassword) {
+            // Ahora intentar login con la contraseña temporal
+            const { error: loginError } = await supabase.auth.signInWithPassword({
               email,
-              password
+              password: result.temporaryPassword
             });
-            console.log('Resultado del login después de crear admin:', { loginData, loginError });
+            
+            if (!loginError) {
+              // Informar al usuario que debe cambiar la contraseña
+              throw new Error('Admin creado. Use la contraseña temporal del log para iniciar sesión y cámbiela inmediatamente.');
+            }
             return { error: loginError };
           } else {
             return { error: { message: result.error || 'Error creando admin' } };
           }
         }
         
-        console.log('Resultado del login:', { data, error });
         return { error };
         
-      } catch (err) {
-        console.error('Error en signInWorker:', err);
-        return { error: { message: 'Error interno del servidor' } };
+      } catch (err: any) {
+        return { error: { message: err.message || 'Error interno del servidor' } };
       }
     }
     
     // Para otros usuarios, login normal
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
     
-    console.log('Resultado del login:', { data, error });
     return { error };
   };
 

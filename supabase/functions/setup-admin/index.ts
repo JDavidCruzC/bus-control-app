@@ -22,10 +22,13 @@ Deno.serve(async (req) => {
       }
     )
 
+    // Generate a secure random password
+    const securePassword = crypto.randomUUID() + crypto.randomUUID();
+    
     // Create admin user with proper authentication
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: 'admin@sistema.com',
-      password: 'admin123',
+      password: securePassword,
       email_confirm: true,
       user_metadata: {
         user_type: 'trabajador'
@@ -103,8 +106,10 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Admin user created successfully',
-        user_id: authData.user.id 
+        message: 'Usuario administrador creado exitosamente. IMPORTANTE: Cambie la contraseña inmediatamente.',
+        user_id: authData.user.id,
+        email: 'admin@sistema.com',
+        temporaryPassword: securePassword
       }),
       { 
         status: 200, 

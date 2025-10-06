@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Bus, ArrowLeft, Users, Truck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { loginSchema, conductorLoginSchema } from "@/lib/validations/auth";
 
 const WorkerLogin = () => {
   const [email, setEmail] = useState("");
@@ -28,23 +29,39 @@ const WorkerLogin = () => {
     setLoading(true);
     setError("");
 
-    const { error: signInError } = await signInWorker(email, password);
-
-    if (signInError) {
-      setError("Credenciales incorrectas. Verifique su email y contraseña.");
-      toast({
-        title: "Error de autenticación",
-        description: "Credenciales incorrectas",
-        variant: "destructive",
+    try {
+      // Validate input
+      const validation = loginSchema.safeParse({
+        email,
+        password,
       });
-    } else {
+
+      if (!validation.success) {
+        const firstError = validation.error.errors[0];
+        throw new Error(firstError.message);
+      }
+
+      const { error: signInError } = await signInWorker(validation.data.email, validation.data.password);
+
+      if (signInError) {
+        throw new Error(signInError.message || "Credenciales incorrectas");
+      }
+
       toast({
         title: "Bienvenido Administrador",
         description: "Inicio de sesión exitoso",
       });
       navigate("/admin");
+    } catch (error: any) {
+      setError(error.message);
+      toast({
+        title: "Error de autenticación",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleConductorSubmit = async (e: React.FormEvent) => {
@@ -52,23 +69,39 @@ const WorkerLogin = () => {
     setLoading(true);
     setError("");
 
-    const { error: signInError } = await signInConductor(placa, password);
-
-    if (signInError) {
-      setError("Credenciales incorrectas. Verifique su placa y contraseña.");
-      toast({
-        title: "Error de autenticación",
-        description: "Placa o contraseña incorrecta",
-        variant: "destructive",
+    try {
+      // Validate input
+      const validation = conductorLoginSchema.safeParse({
+        placa,
+        password,
       });
-    } else {
+
+      if (!validation.success) {
+        const firstError = validation.error.errors[0];
+        throw new Error(firstError.message);
+      }
+
+      const { error: signInError } = await signInConductor(validation.data.placa, validation.data.password);
+
+      if (signInError) {
+        throw new Error(signInError.message || "Credenciales incorrectas");
+      }
+
       toast({
         title: "Bienvenido Conductor",
         description: "Inicio de sesión exitoso",
       });
       navigate("/conductor");
+    } catch (error: any) {
+      setError(error.message);
+      toast({
+        title: "Error de autenticación",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
