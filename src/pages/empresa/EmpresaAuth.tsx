@@ -166,12 +166,13 @@ export default function EmpresaAuth() {
             </TabsList>
 
             <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form onSubmit={handleLogin} className="space-y-4" noValidate>
                 <div className="space-y-2">
                   <Label htmlFor="login-email">Email</Label>
                   <Input
                     id="login-email"
-                    type="email"
+                    type="text"
+                    autoComplete="email"
                     placeholder="empresa@ejemplo.com"
                     value={loginData.email}
                     onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
@@ -195,7 +196,7 @@ export default function EmpresaAuth() {
             </TabsContent>
 
             <TabsContent value="register">
-              <form onSubmit={handleRegister} className="space-y-4">
+              <form onSubmit={handleRegister} className="space-y-4" noValidate>
                 <div className="space-y-2">
                   <Label htmlFor="register-nombre">Nombre de la Empresa *</Label>
                   <Input
@@ -228,7 +229,8 @@ export default function EmpresaAuth() {
                   <Label htmlFor="register-email">Email *</Label>
                   <Input
                     id="register-email"
-                    type="email"
+                    type="text"
+                    autoComplete="email"
                     placeholder="empresa@ejemplo.com"
                     value={registerData.email}
                     onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
