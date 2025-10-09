@@ -35,35 +35,68 @@ export function useRutasPublicas(empresaId?: string | null) {
       setLoading(true);
       setError(null);
 
-      // Obtener rutas con sus paraderos y empresa
-      let query = supabase
-        .from('rutas')
-        .select(`
-          id,
-          codigo,
-          nombre,
-          descripcion,
-          distancia_km,
-          tiempo_estimado_minutos,
-          precio,
-          empresa_id,
-          empresa:empresas(
+      // Check if user is authenticated
+      const { data: { session } } = await supabase.auth.getSession();
+      const isAuthenticated = !!session;
+
+      let rutasData;
+
+      if (isAuthenticated) {
+        // Authenticated users can see all active routes from their company
+        let query = supabase
+          .from('rutas')
+          .select(`
             id,
+            codigo,
             nombre,
-            logo_url,
-            telefono
-          )
-        `)
-        .eq('activo', true);
+            descripcion,
+            distancia_km,
+            tiempo_estimado_minutos,
+            precio,
+            empresa_id,
+            empresa:empresas(
+              id,
+              nombre,
+              logo_url,
+              telefono
+            )
+          `)
+          .eq('activo', true);
 
-      // Filtrar por empresa si se proporciona
-      if (empresaId) {
-        query = query.eq('empresa_id', empresaId);
+        if (empresaId) {
+          query = query.eq('empresa_id', empresaId);
+        }
+
+        const { data, error } = await query.order('codigo');
+        if (error) throw error;
+        rutasData = data;
+      } else {
+        // Anonymous users can only see explicitly public routes
+        const { data: publicRutas, error: publicError } = await supabase
+          .from('rutas_publicas')
+          .select(`
+            ruta:rutas(
+              id,
+              codigo,
+              nombre,
+              descripcion,
+              distancia_km,
+              tiempo_estimado_minutos,
+              precio,
+              empresa_id,
+              empresa:empresas(
+                id,
+                nombre,
+                logo_url,
+                telefono
+              )
+            )
+          `)
+          .eq('visible_publico', true);
+
+        if (publicError) throw publicError;
+        rutasData = publicRutas?.map(pr => pr.ruta).filter(Boolean) || [];
       }
-
-      const { data: rutasData, error: rutasError } = await query.order('codigo');
-
-      if (rutasError) throw rutasError;
 
       // Para cada ruta, obtener sus paraderos
       const rutasConParaderos = await Promise.all(

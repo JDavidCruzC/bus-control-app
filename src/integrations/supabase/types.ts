@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          ip_address: unknown | null
+          new_values: Json | null
+          old_values: Json | null
+          record_id: string | null
+          table_name: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          table_name?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          table_name?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       clientes: {
         Row: {
           activo: boolean | null
@@ -626,6 +665,42 @@ export type Database = {
           },
         ]
       }
+      rutas_publicas: {
+        Row: {
+          fecha_publicacion: string | null
+          publicado_por: string | null
+          ruta_id: string
+          visible_publico: boolean | null
+        }
+        Insert: {
+          fecha_publicacion?: string | null
+          publicado_por?: string | null
+          ruta_id: string
+          visible_publico?: boolean | null
+        }
+        Update: {
+          fecha_publicacion?: string | null
+          publicado_por?: string | null
+          ruta_id?: string
+          visible_publico?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rutas_publicas_publicado_por_fkey"
+            columns: ["publicado_por"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rutas_publicas_ruta_id_fkey"
+            columns: ["ruta_id"]
+            isOneToOne: true
+            referencedRelation: "rutas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ubicaciones_tiempo_real: {
         Row: {
           conductor_id: string | null
@@ -700,7 +775,6 @@ export type Database = {
           empresa_id: string | null
           id: string
           nombre: string
-          password_hash: string | null
           rol_id: string | null
           telefono: string | null
           ultimo_login: string | null
@@ -715,7 +789,6 @@ export type Database = {
           empresa_id?: string | null
           id?: string
           nombre: string
-          password_hash?: string | null
           rol_id?: string | null
           telefono?: string | null
           ultimo_login?: string | null
@@ -730,7 +803,6 @@ export type Database = {
           empresa_id?: string | null
           id?: string
           nombre?: string
-          password_hash?: string | null
           rol_id?: string | null
           telefono?: string | null
           ultimo_login?: string | null
@@ -892,6 +964,10 @@ export type Database = {
           success: boolean
           user_id: string
         }[]
+      }
+      can_view_employee_pii: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
       get_conductor_email_by_placa: {
         Args: { placa_input: string }

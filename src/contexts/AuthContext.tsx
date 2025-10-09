@@ -7,6 +7,7 @@ interface AuthContextType {
   session: Session | null;
   userType: 'trabajador' | 'cliente' | 'conductor' | null;
   userData: any;
+  userRole: string | null;
   loading: boolean;
   signInWorker: (email: string, password: string) => Promise<{ error: any }>;
   signInConductor: (placa: string, password: string) => Promise<{ error: any }>;
@@ -22,6 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [userType, setUserType] = useState<'trabajador' | 'cliente' | 'conductor' | null>(null);
   const [userData, setUserData] = useState<any>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchUserData = async (userId: string) => {
@@ -40,6 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (trabajadorData) {
         setUserType('trabajador');
         setUserData(trabajadorData);
+        setUserRole(trabajadorData.rol?.nombre || null);
         return;
       }
 
@@ -53,6 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (conductorData) {
         setUserType('conductor');
         setUserData(conductorData);
+        setUserRole('conductor');
         return;
       }
 
@@ -66,15 +70,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (clienteData) {
         setUserType('cliente');
         setUserData(clienteData);
+        setUserRole('cliente');
         return;
       }
 
       // Si no se encuentra en ninguna tabla
       setUserType(null);
       setUserData(null);
+      setUserRole(null);
     } catch (error) {
       setUserType(null);
       setUserData(null);
+      setUserRole(null);
     } finally {
       setLoading(false);
     }
@@ -95,6 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           setUserType(null);
           setUserData(null);
+          setUserRole(null);
         }
         setLoading(false);
       }
@@ -228,6 +236,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSession(null);
     setUserType(null);
     setUserData(null);
+    setUserRole(null);
   };
 
   const value = {
@@ -235,6 +244,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     userType,
     userData,
+    userRole,
     loading,
     signInWorker,
     signInConductor,

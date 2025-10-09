@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useUsuarios } from "@/hooks/useUsuarios";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,9 +37,13 @@ import {
 
 export function Trabajadores() {
   const { usuarios, loading, updateUsuario } = useUsuarios();
+  const { userRole } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [rolFilter, setRolFilter] = useState("todos");
   const [estadoFilter, setEstadoFilter] = useState("todos");
+
+  // Check if current user can view PII
+  const canViewPII = userRole === 'administrador' || userRole === 'super_admin';
 
   const filteredUsuarios = usuarios.filter(usuario => {
     const matchesSearch = usuario.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -225,9 +230,11 @@ export function Trabajadores() {
                           {getInitials(usuario.nombre, usuario.apellido)}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
+                       <div>
                         <p className="font-medium">{usuario.nombre} {usuario.apellido}</p>
-                        <p className="text-sm text-muted-foreground">{usuario.email}</p>
+                        {canViewPII && usuario.email && (
+                          <p className="text-sm text-muted-foreground">{usuario.email}</p>
+                        )}
                       </div>
                     </div>
                   </TableCell>
@@ -237,20 +244,24 @@ export function Trabajadores() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="space-y-1">
-                      {usuario.email && (
-                        <div className="flex items-center gap-1 text-sm">
-                          <Mail className="h-3 w-3" />
-                          {usuario.email}
-                        </div>
-                      )}
-                      {usuario.telefono && (
-                        <div className="flex items-center gap-1 text-sm">
-                          <Phone className="h-3 w-3" />
-                          {usuario.telefono}
-                        </div>
-                      )}
-                    </div>
+                    {canViewPII ? (
+                      <div className="space-y-1">
+                        {usuario.email && (
+                          <div className="flex items-center gap-1 text-sm">
+                            <Mail className="h-3 w-3" />
+                            {usuario.email}
+                          </div>
+                        )}
+                        {usuario.telefono && (
+                          <div className="flex items-center gap-1 text-sm">
+                            <Phone className="h-3 w-3" />
+                            {usuario.telefono}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Restringido</p>
+                    )}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {formatDate(usuario.ultimo_login)}
