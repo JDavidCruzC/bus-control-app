@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Eye,
   Camera,
@@ -35,6 +36,7 @@ import {
 export function MIRA() {
   const [sistemaActivo, setSistemaActivo] = useState(true);
   const [selectedCamera, setSelectedCamera] = useState("cam_001");
+  const { toast } = useToast();
 
   // Datos de ejemplo para el sistema MIRA
   const camaras = [
@@ -86,13 +88,28 @@ export function MIRA() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2"
+            onClick={() => toast({
+              title: "Configuración",
+              description: "Abriendo panel de configuración del sistema MIRA..."
+            })}
+          >
             <Settings className="h-4 w-4" />
             Configurar
           </Button>
           <Button 
             variant={sistemaActivo ? "default" : "outline"}
-            onClick={() => setSistemaActivo(!sistemaActivo)}
+            onClick={() => {
+              setSistemaActivo(!sistemaActivo);
+              toast({
+                title: sistemaActivo ? "Sistema pausado" : "Sistema activado",
+                description: sistemaActivo 
+                  ? "El monitoreo ha sido pausado" 
+                  : "El monitoreo está activo nuevamente"
+              });
+            }}
             className="flex items-center gap-2"
           >
             {sistemaActivo ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
@@ -333,19 +350,47 @@ export function MIRA() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button variant="outline" className="w-full justify-start">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => toast({
+                  title: "Calibración de Cámaras",
+                  description: "Iniciando proceso de calibración para todas las cámaras activas..."
+                })}
+              >
                 <Camera className="h-4 w-4 mr-2" />
                 Calibrar Cámaras
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => toast({
+                  title: "Ajuste de IA",
+                  description: "Abriendo panel de configuración de parámetros de reconocimiento..."
+                })}
+              >
                 <Cpu className="h-4 w-4 mr-2" />
                 Ajustar IA
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => toast({
+                  title: "Logs del Sistema",
+                  description: "Cargando registros de actividad del sistema MIRA..."
+                })}
+              >
                 <Activity className="h-4 w-4 mr-2" />
                 Ver Logs
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => toast({
+                  title: "Zona de Detección",
+                  description: "Abriendo editor de zonas de detección para las cámaras..."
+                })}
+              >
                 <Eye className="h-4 w-4 mr-2" />
                 Zona de Detección
               </Button>
