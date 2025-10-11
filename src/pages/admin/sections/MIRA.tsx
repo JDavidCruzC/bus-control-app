@@ -32,10 +32,26 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function MIRA() {
   const [sistemaActivo, setSistemaActivo] = useState(true);
   const [selectedCamera, setSelectedCamera] = useState("cam_001");
+  const [showCalibracion, setShowCalibracion] = useState(false);
+  const [showAjusteIA, setShowAjusteIA] = useState(false);
+  const [showLogs, setShowLogs] = useState(false);
+  const [showZonaDeteccion, setShowZonaDeteccion] = useState(false);
+  const [showConfiguracion, setShowConfiguracion] = useState(false);
   const { toast } = useToast();
 
   // Datos de ejemplo para el sistema MIRA
@@ -91,10 +107,7 @@ export function MIRA() {
           <Button 
             variant="outline" 
             className="flex items-center gap-2"
-            onClick={() => toast({
-              title: "Configuración",
-              description: "Abriendo panel de configuración del sistema MIRA..."
-            })}
+            onClick={() => setShowConfiguracion(true)}
           >
             <Settings className="h-4 w-4" />
             Configurar
@@ -353,10 +366,7 @@ export function MIRA() {
               <Button 
                 variant="outline" 
                 className="w-full justify-start"
-                onClick={() => toast({
-                  title: "Calibración de Cámaras",
-                  description: "Iniciando proceso de calibración para todas las cámaras activas..."
-                })}
+                onClick={() => setShowCalibracion(true)}
               >
                 <Camera className="h-4 w-4 mr-2" />
                 Calibrar Cámaras
@@ -364,10 +374,7 @@ export function MIRA() {
               <Button 
                 variant="outline" 
                 className="w-full justify-start"
-                onClick={() => toast({
-                  title: "Ajuste de IA",
-                  description: "Abriendo panel de configuración de parámetros de reconocimiento..."
-                })}
+                onClick={() => setShowAjusteIA(true)}
               >
                 <Cpu className="h-4 w-4 mr-2" />
                 Ajustar IA
@@ -375,10 +382,7 @@ export function MIRA() {
               <Button 
                 variant="outline" 
                 className="w-full justify-start"
-                onClick={() => toast({
-                  title: "Logs del Sistema",
-                  description: "Cargando registros de actividad del sistema MIRA..."
-                })}
+                onClick={() => setShowLogs(true)}
               >
                 <Activity className="h-4 w-4 mr-2" />
                 Ver Logs
@@ -386,10 +390,7 @@ export function MIRA() {
               <Button 
                 variant="outline" 
                 className="w-full justify-start"
-                onClick={() => toast({
-                  title: "Zona de Detección",
-                  description: "Abriendo editor de zonas de detección para las cámaras..."
-                })}
+                onClick={() => setShowZonaDeteccion(true)}
               >
                 <Eye className="h-4 w-4 mr-2" />
                 Zona de Detección
@@ -398,6 +399,254 @@ export function MIRA() {
           </Card>
         </div>
       </div>
+
+      {/* Dialog de Configuración General */}
+      <Dialog open={showConfiguracion} onOpenChange={setShowConfiguracion}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Configuración General del Sistema
+            </DialogTitle>
+            <DialogDescription>
+              Ajusta los parámetros generales del sistema MIRA
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Tiempo de retención de videos (días)</Label>
+              <Input type="number" defaultValue={30} />
+            </div>
+            <div className="space-y-2">
+              <Label>Resolución de grabación</Label>
+              <Select defaultValue="1080p">
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="720p">720p</SelectItem>
+                  <SelectItem value="1080p">1080p</SelectItem>
+                  <SelectItem value="4k">4K</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>FPS de grabación</Label>
+              <Input type="number" defaultValue={30} />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowConfiguracion(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={() => {
+                setShowConfiguracion(false);
+                toast({ title: "Configuración guardada", description: "Los cambios se han aplicado correctamente" });
+              }}>
+                Guardar Cambios
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Calibración de Cámaras */}
+      <Dialog open={showCalibracion} onOpenChange={setShowCalibracion}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Camera className="h-5 w-5" />
+              Calibración de Cámaras
+            </DialogTitle>
+            <DialogDescription>
+              Ajusta la configuración individual de cada cámara
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Seleccionar Cámara</Label>
+              <Select defaultValue="cam_001">
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {camaras.map((cam) => (
+                    <SelectItem key={cam.id} value={cam.id}>
+                      {cam.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Brillo</Label>
+              <Slider defaultValue={[50]} max={100} step={1} />
+            </div>
+            <div className="space-y-2">
+              <Label>Contraste</Label>
+              <Slider defaultValue={[50]} max={100} step={1} />
+            </div>
+            <div className="space-y-2">
+              <Label>Saturación</Label>
+              <Slider defaultValue={[50]} max={100} step={1} />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowCalibracion(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={() => {
+                setShowCalibracion(false);
+                toast({ title: "Calibración completada", description: "La cámara ha sido calibrada exitosamente" });
+              }}>
+                Aplicar Calibración
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Ajuste de IA */}
+      <Dialog open={showAjusteIA} onOpenChange={setShowAjusteIA}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Cpu className="h-5 w-5" />
+              Ajuste de Parámetros de IA
+            </DialogTitle>
+            <DialogDescription>
+              Configura los parámetros del modelo de reconocimiento
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Umbral de Confianza Mínimo (%)</Label>
+              <Slider defaultValue={[75]} max={100} step={1} />
+              <p className="text-xs text-muted-foreground">
+                Detecciones con confianza menor a este valor serán rechazadas
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label>Velocidad de Procesamiento</Label>
+              <Select defaultValue="balanced">
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="fast">Rápido (menor precisión)</SelectItem>
+                  <SelectItem value="balanced">Balanceado</SelectItem>
+                  <SelectItem value="accurate">Preciso (más lento)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Intervalo de Detección (segundos)</Label>
+              <Input type="number" defaultValue={2} min={1} max={10} />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowAjusteIA(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={() => {
+                setShowAjusteIA(false);
+                toast({ title: "Parámetros actualizados", description: "La IA ha sido reconfigurada correctamente" });
+              }}>
+                Guardar Parámetros
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Logs del Sistema */}
+      <Dialog open={showLogs} onOpenChange={setShowLogs}>
+        <DialogContent className="max-w-3xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              Logs del Sistema
+            </DialogTitle>
+            <DialogDescription>
+              Registro de actividad y eventos del sistema MIRA
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="h-96">
+            <div className="space-y-2 font-mono text-xs">
+              <div className="p-2 bg-muted rounded">
+                <span className="text-green-600">[2024-01-15 14:30:25]</span> INFO: Detección exitosa - Placa ABC-123 (95% confianza)
+              </div>
+              <div className="p-2 bg-muted rounded">
+                <span className="text-blue-600">[2024-01-15 14:28:10]</span> INFO: Detección exitosa - Placa DEF-456 (88% confianza)
+              </div>
+              <div className="p-2 bg-muted rounded">
+                <span className="text-yellow-600">[2024-01-15 14:25:45]</span> WARN: Cámara Universidad - Calidad de imagen baja
+              </div>
+              <div className="p-2 bg-muted rounded">
+                <span className="text-green-600">[2024-01-15 14:22:30]</span> INFO: Sistema de IA reiniciado correctamente
+              </div>
+              <div className="p-2 bg-muted rounded">
+                <span className="text-red-600">[2024-01-15 14:20:15]</span> ERROR: Cámara Universidad desconectada
+              </div>
+              <div className="p-2 bg-muted rounded">
+                <span className="text-green-600">[2024-01-15 14:15:00]</span> INFO: Calibración de cámara Terminal Principal completada
+              </div>
+            </div>
+          </ScrollArea>
+          <div className="flex justify-end">
+            <Button onClick={() => setShowLogs(false)}>
+              Cerrar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Zona de Detección */}
+      <Dialog open={showZonaDeteccion} onOpenChange={setShowZonaDeteccion}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5" />
+              Editor de Zonas de Detección
+            </DialogTitle>
+            <DialogDescription>
+              Define las áreas donde se realizará el reconocimiento de placas
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Seleccionar Cámara</Label>
+              <Select defaultValue="cam_001">
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {camaras.map((cam) => (
+                    <SelectItem key={cam.id} value={cam.id}>
+                      {cam.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="w-full h-64 bg-black rounded-lg flex items-center justify-center relative border-2 border-dashed border-primary">
+              <div className="text-center space-y-2">
+                <Camera className="h-12 w-12 text-white/50 mx-auto" />
+                <p className="text-white/75">Vista previa de la cámara</p>
+                <p className="text-white/50 text-sm">Haz clic y arrastra para definir zonas de detección</p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowZonaDeteccion(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={() => {
+                setShowZonaDeteccion(false);
+                toast({ title: "Zonas guardadas", description: "Las zonas de detección han sido configuradas" });
+              }}>
+                Guardar Zonas
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
