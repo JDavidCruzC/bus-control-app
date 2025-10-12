@@ -12,6 +12,7 @@ export type Paradero = {
   activo: boolean;
   tiene_asientos: boolean;
   tiene_techado: boolean;
+  empresa_id: string;
   created_at: string;
   updated_at: string;
 };
@@ -41,11 +42,24 @@ export function useParaderos() {
     }
   };
 
-  const createParadero = async (paradero: Omit<Paradero, 'id' | 'created_at' | 'updated_at'>) => {
+  const createParadero = async (paradero: Omit<Paradero, 'id' | 'created_at' | 'updated_at' | 'empresa_id'>) => {
     try {
+      // Get current user's empresa_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuario no autenticado');
+
+      const { data: userData, error: userError } = await supabase
+        .from('usuarios')
+        .select('empresa_id')
+        .eq('id', user.id)
+        .single();
+
+      if (userError) throw userError;
+      if (!userData?.empresa_id) throw new Error('Usuario sin empresa asignada');
+
       const { data, error } = await supabase
         .from('paraderos')
-        .insert([paradero])
+        .insert([{ ...paradero, empresa_id: userData.empresa_id }])
         .select()
         .single();
 
@@ -60,7 +74,7 @@ export function useParaderos() {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "No se pudo crear el paradero",
+        description: error.message || "No se pudo crear el paradero",
         variant: "destructive"
       });
       throw error;

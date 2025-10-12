@@ -390,6 +390,7 @@ export type Database = {
           created_at: string | null
           descripcion: string | null
           direccion: string | null
+          empresa_id: string
           id: string
           latitud: number
           longitud: number
@@ -403,6 +404,7 @@ export type Database = {
           created_at?: string | null
           descripcion?: string | null
           direccion?: string | null
+          empresa_id: string
           id?: string
           latitud: number
           longitud: number
@@ -416,6 +418,7 @@ export type Database = {
           created_at?: string | null
           descripcion?: string | null
           direccion?: string | null
+          empresa_id?: string
           id?: string
           latitud?: number
           longitud?: number
@@ -424,7 +427,15 @@ export type Database = {
           tiene_techado?: boolean | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "paraderos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rate_limits: {
         Row: {
