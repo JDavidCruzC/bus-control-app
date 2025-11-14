@@ -1,6 +1,18 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { z } from 'zod';
+
+const paraderoSchema = z.object({
+  nombre: z.string().trim().min(1, 'El nombre es requerido').max(100, 'El nombre no puede exceder 100 caracteres'),
+  descripcion: z.string().max(500, 'La descripción no puede exceder 500 caracteres').optional(),
+  latitud: z.number().min(-90, 'Latitud inválida').max(90, 'Latitud inválida'),
+  longitud: z.number().min(-180, 'Longitud inválida').max(180, 'Longitud inválida'),
+  direccion: z.string().max(500, 'La dirección no puede exceder 500 caracteres').optional(),
+  activo: z.boolean(),
+  tiene_asientos: z.boolean(),
+  tiene_techado: z.boolean()
+});
 
 export type Paradero = {
   id: string;
@@ -44,6 +56,9 @@ export function useParaderos() {
 
   const createParadero = async (paradero: Omit<Paradero, 'id' | 'created_at' | 'updated_at' | 'empresa_id'>) => {
     try {
+      // Validate input
+      const validated = paraderoSchema.parse(paradero) as Omit<Paradero, 'id' | 'created_at' | 'updated_at' | 'empresa_id'>;
+
       // Get current user's empresa_id
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuario no autenticado');
@@ -59,7 +74,7 @@ export function useParaderos() {
 
       const { data, error } = await supabase
         .from('paraderos')
-        .insert([{ ...paradero, empresa_id: userData.empresa_id }])
+        .insert([{ ...validated, empresa_id: userData.empresa_id }])
         .select()
         .single();
 
@@ -83,9 +98,12 @@ export function useParaderos() {
 
   const updateParadero = async (id: string, updates: Partial<Paradero>) => {
     try {
+      // Validate input - only validate fields that are being updated
+      const validated = paraderoSchema.partial().parse(updates) as Partial<Paradero>;
+
       const { data, error } = await supabase
         .from('paraderos')
-        .update(updates)
+        .update(validated)
         .eq('id', id)
         .select()
         .single();

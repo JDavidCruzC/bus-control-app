@@ -1,6 +1,21 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { z } from 'zod';
+
+const vehiculoSchema = z.object({
+  placa: z.string().trim().min(1, 'La placa es requerida').max(20, 'La placa no puede exceder 20 caracteres').toUpperCase(),
+  marca: z.string().max(50, 'La marca no puede exceder 50 caracteres').optional(),
+  modelo: z.string().max(50, 'El modelo no puede exceder 50 caracteres').optional(),
+  año: z.number().int().min(1900, 'Año inválido').max(new Date().getFullYear() + 1, 'Año inválido').optional(),
+  color: z.string().max(30, 'El color no puede exceder 30 caracteres').optional(),
+  numero_interno: z.string().max(20, 'El número interno no puede exceder 20 caracteres').optional(),
+  capacidad_pasajeros: z.number().int().min(1, 'Capacidad inválida').max(100, 'Capacidad inválida').optional(),
+  tiene_gps: z.boolean(),
+  tiene_aire: z.boolean(),
+  activo: z.boolean(),
+  empresa_id: z.string().uuid('ID de empresa inválido').optional()
+});
 
 export type Vehiculo = {
   id: string;
@@ -46,9 +61,12 @@ export function useVehiculos() {
 
   const createVehiculo = async (vehiculo: Omit<Vehiculo, 'id' | 'created_at' | 'updated_at'>) => {
     try {
+      // Validate input
+      const validated = vehiculoSchema.parse(vehiculo) as Omit<Vehiculo, 'id' | 'created_at' | 'updated_at'>;
+
       const { data, error } = await supabase
         .from('vehiculos')
-        .insert([vehiculo])
+        .insert([validated])
         .select()
         .single();
 
@@ -72,9 +90,12 @@ export function useVehiculos() {
 
   const updateVehiculo = async (id: string, updates: Partial<Vehiculo>) => {
     try {
+      // Validate input - only validate fields that are being updated
+      const validated = vehiculoSchema.partial().parse(updates) as Partial<Vehiculo>;
+
       const { data, error } = await supabase
         .from('vehiculos')
-        .update(updates)
+        .update(validated)
         .eq('id', id)
         .select()
         .single();
