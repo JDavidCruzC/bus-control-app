@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { MapPin, Plus, Edit, Trash2, Navigation, Search, Filter } from "lucide-react";
 import { useParaderos, type Paradero } from "@/hooks/useParaderos";
 import { ParaderoDialog } from "@/components/admin/ParaderoDialog";
+import { GestionRutasDialog } from "@/components/admin/GestionRutasDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -47,22 +48,34 @@ export function Paradero() {
     await deleteParadero(id);
   };
 
+  const [rutasDialogOpen, setRutasDialogOpen] = useState(false);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <MapPin className="h-6 w-6 text-primary" />
-            Gestión de Paraderos
+            Gestión de Paraderos y Rutas
           </h1>
           <p className="text-muted-foreground mt-1">
-            Administrar ubicaciones y estado de las paradas de autobús
+            Administrar ubicaciones de paradas y trazado completo de rutas
           </p>
         </div>
-        <Button onClick={handleNew} className="w-full sm:w-auto">
-          <Plus className="h-4 w-4 mr-2" />
-          Nuevo Paradero
-        </Button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button 
+            onClick={() => setRutasDialogOpen(true)} 
+            variant="outline"
+            className="flex-1 sm:flex-none"
+          >
+            <Navigation className="h-4 w-4 mr-2" />
+            Gestionar Rutas
+          </Button>
+          <Button onClick={handleNew} className="flex-1 sm:flex-none">
+            <Plus className="h-4 w-4 mr-2" />
+            Nuevo Paradero
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -265,6 +278,11 @@ export function Paradero() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         paradero={selectedParadero}
+      />
+
+      <GestionRutasDialog
+        open={rutasDialogOpen}
+        onOpenChange={setRutasDialogOpen}
       />
     </div>
   );
