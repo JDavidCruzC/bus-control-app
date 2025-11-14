@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RutaDialog } from "@/components/admin/RutaDialog";
+import { SimulacionBusesCard } from "@/components/admin/SimulacionBusesCard";
 import { 
   Search, 
   Plus, 
@@ -112,6 +113,9 @@ export function Rutas() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Simulación de Buses */}
+      <SimulacionBusesCard />
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
