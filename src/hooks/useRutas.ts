@@ -1,6 +1,18 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { z } from 'zod';
+
+const rutaSchema = z.object({
+  codigo: z.string().trim().min(1, 'El código es requerido').max(20, 'El código no puede exceder 20 caracteres'),
+  nombre: z.string().trim().min(1, 'El nombre es requerido').max(100, 'El nombre no puede exceder 100 caracteres'),
+  descripcion: z.string().max(500, 'La descripción no puede exceder 500 caracteres').optional(),
+  distancia_km: z.number().min(0, 'Distancia inválida').max(10000, 'Distancia inválida').optional(),
+  tiempo_estimado_minutos: z.number().int().min(0, 'Tiempo inválido').max(1440, 'Tiempo inválido').optional(),
+  precio: z.number().min(0, 'Precio inválido').max(1000000, 'Precio inválido').optional(),
+  activo: z.boolean(),
+  empresa_id: z.string().uuid('ID de empresa inválido').optional()
+});
 
 export type Ruta = {
   id: string;
@@ -43,9 +55,12 @@ export function useRutas() {
 
   const createRuta = async (ruta: Omit<Ruta, 'id' | 'created_at' | 'updated_at'>) => {
     try {
+      // Validate input
+      const validated = rutaSchema.parse(ruta) as Omit<Ruta, 'id' | 'created_at' | 'updated_at'>;
+
       const { data, error } = await supabase
         .from('rutas')
-        .insert([ruta])
+        .insert([validated])
         .select()
         .single();
 
@@ -69,9 +84,12 @@ export function useRutas() {
 
   const updateRuta = async (id: string, updates: Partial<Ruta>) => {
     try {
+      // Validate input - only validate fields that are being updated
+      const validated = rutaSchema.partial().parse(updates) as Partial<Ruta>;
+
       const { data, error } = await supabase
         .from('rutas')
-        .update(updates)
+        .update(validated)
         .eq('id', id)
         .select()
         .single();

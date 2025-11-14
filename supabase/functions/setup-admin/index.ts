@@ -22,6 +22,24 @@ Deno.serve(async (req) => {
       }
     )
 
+    // Check if admin already exists to prevent duplicate creation
+    const { data: existingAdmin } = await supabaseAdmin
+      .from('usuarios')
+      .select('id')
+      .eq('email', 'admin@sistema.com')
+      .single()
+
+    if (existingAdmin) {
+      console.log('Admin already exists')
+      return new Response(
+        JSON.stringify({ error: 'Admin user already exists' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
     // Generate a secure random password
     const securePassword = crypto.randomUUID() + crypto.randomUUID();
     

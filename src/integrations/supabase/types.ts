@@ -19,7 +19,7 @@ export type Database = {
           action: string
           created_at: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           new_values: Json | null
           old_values: Json | null
           record_id: string | null
@@ -31,7 +31,7 @@ export type Database = {
           action: string
           created_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_values?: Json | null
           old_values?: Json | null
           record_id?: string | null
@@ -43,7 +43,7 @@ export type Database = {
           action?: string
           created_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_values?: Json | null
           old_values?: Json | null
           record_id?: string | null
@@ -976,10 +976,7 @@ export type Database = {
           user_id: string
         }[]
       }
-      can_view_employee_pii: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      can_view_employee_pii: { Args: never; Returns: boolean }
       get_conductor_email_by_placa: {
         Args: { placa_input: string }
         Returns: {
@@ -990,14 +987,8 @@ export type Database = {
           user_id: string
         }[]
       }
-      get_current_user_empresa_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_current_user_empresa_id: { Args: never; Returns: string }
+      get_current_user_role: { Args: never; Returns: string }
       setup_admin_user: {
         Args: { email_param: string; user_id_param: string }
         Returns: undefined
