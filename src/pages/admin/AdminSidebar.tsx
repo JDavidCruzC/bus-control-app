@@ -20,6 +20,7 @@ import {
   FileText,
   Settings,
   LogOut,
+  AlertTriangle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -35,6 +36,7 @@ const adminItems = [
   { title: "Conductores", url: "/admin/conductores", icon: UserCheck },
   { title: "Vehículos", url: "/admin/vehiculos", icon: Bus },
   { title: "Rutas", url: "/admin/rutas", icon: FileText },
+  { title: "Desvíos", url: "/admin/desvios", icon: AlertTriangle },
   { title: "Reportes", url: "/admin/reportes", icon: FileText },
 ];
 

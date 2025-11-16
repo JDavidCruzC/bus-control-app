@@ -10,6 +10,7 @@ import { Reportes } from "./sections/Reportes";
 import { Mapa } from "./sections/Mapa";
 import { MIRA } from "./sections/MIRA";
 import { Ajustes } from "./sections/Ajustes";
+import { Desvios } from "./sections/Desvios";
 
 export default function AdminIndex() {
   return (
@@ -57,6 +58,11 @@ export default function AdminIndex() {
       <Route path="/reportes" element={
         <AdminLayout>
           <Reportes />
+        </AdminLayout>
+      } />
+      <Route path="/desvios" element={
+        <AdminLayout>
+          <Desvios />
         </AdminLayout>
       } />
       <Route path="/ajustes" element={
