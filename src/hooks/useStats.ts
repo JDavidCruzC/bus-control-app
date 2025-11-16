@@ -40,8 +40,8 @@ export function useStats() {
       
       // Fetch conductor stats
       const { data: conductores, error: conductoresError } = await supabase
-        .from('conductors')
-        .select('estado');
+        .from('conductores')
+        .select('activo');
 
       // Fetch route stats
       const { data: rutas, error: rutasError } = await supabase
@@ -75,7 +75,7 @@ export function useStats() {
         totalVehiculos: vehiculos?.length || 0,
         vehiculosActivos: vehiculos?.filter(v => v.activo).length || 0,
         totalConductores: conductores?.length || 0,
-        conductoresActivos: conductores?.filter(c => c.estado === 'activo').length || 0,
+        conductoresActivos: conductores?.filter(c => c.activo).length || 0,
         totalRutas: rutas?.length || 0,
         rutasActivas: rutas?.filter(r => r.activo).length || 0,
         totalParaderos: paraderos?.length || 0,

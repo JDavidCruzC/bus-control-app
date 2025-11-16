@@ -25,9 +25,16 @@ type Viaje = {
 type Conductor = {
   id: string;
   placa: string;
-  nombre: string;
-  apellido: string;
-  estado: string;
+  licencia_numero: string;
+  activo: boolean;
+  created_at: string;
+  updated_at: string;
+  usuario?: {
+    nombre: string;
+    apellido: string;
+    telefono: string;
+    email: string;
+  };
 };
 
 export default function ConductorDashboard() {
@@ -48,9 +55,9 @@ export default function ConductorDashboard() {
       if (!user.user) return;
 
       const { data, error } = await supabase
-        .from('conductors')
+        .from('conductores')
         .select('*')
-        .eq('user_id', user.user.id)
+        .eq('usuario_id', user.user.id)
         .single();
 
       if (error) throw error;
@@ -71,9 +78,9 @@ export default function ConductorDashboard() {
 
       // Buscar conductor primero
       const { data: conductorData } = await supabase
-        .from('conductors')
+        .from('conductores')
         .select('id')
-        .eq('user_id', user.user.id)
+        .eq('usuario_id', user.user.id)
         .single();
 
       if (!conductorData) return;
@@ -253,12 +260,12 @@ export default function ConductorDashboard() {
             </h1>
             {conductor && (
               <p className="text-muted-foreground">
-                {conductor.nombre} {conductor.apellido} • Placa: {conductor.placa}
+                {conductor.usuario?.nombre} {conductor.usuario?.apellido} • Placa: {conductor.placa}
               </p>
             )}
           </div>
-          <Badge variant={conductor?.estado === 'activo' ? 'default' : 'secondary'}>
-            {conductor?.estado === 'activo' ? 'Activo' : 'Inactivo'}
+          <Badge variant={conductor?.activo ? 'default' : 'secondary'}>
+            {conductor?.activo ? 'Activo' : 'Inactivo'}
           </Badge>
         </div>
 

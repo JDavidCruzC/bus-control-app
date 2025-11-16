@@ -268,7 +268,7 @@ export default function UbicacionTiempoReal() {
 
                         {ubicacion.conductor && (
                           <p className="text-sm font-medium">
-                            {ubicacion.conductor.nombre} {ubicacion.conductor.apellido}
+                            {ubicacion.conductor.usuario.nombre} {ubicacion.conductor.usuario.apellido}
                           </p>
                         )}
 

@@ -10,9 +10,11 @@ export type UbicacionTiempoReal = {
   conductor_id: string | null;
   vehiculo_id: string | null;
   conductor?: {
-    nombre: string;
-    apellido: string;
     placa: string;
+    usuario: {
+      nombre: string;
+      apellido: string;
+    };
   };
   vehiculo?: {
     placa: string;
@@ -63,8 +65,8 @@ export function useUbicacionesTiempoReal() {
 
         // Obtener datos de conductores
         const { data: conductoresData } = await supabase
-          .from('conductors')
-          .select('id, nombre, apellido, placa')
+          .from('conductores')
+          .select('id, placa, usuario:usuarios(nombre, apellido)')
           .in('id', conductorIds);
 
         // Obtener datos de vehículos con empresa
