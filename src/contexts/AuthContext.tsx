@@ -48,9 +48,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Intentar obtener datos de conductor
       const { data: conductorData } = await supabase
-        .from('conductors')
+        .from('conductores')
         .select('*')
-        .eq('user_id', userId)
+        .eq('usuario_id', userId)
         .maybeSingle();
 
       if (conductorData) {

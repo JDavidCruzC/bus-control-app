@@ -14,25 +14,25 @@ export function Conductores() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'activo' | 'inactivo'>('all');
 
   const filteredConductores = conductores.filter(conductor => {
-    const matchesSearch = conductor.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         conductor.apellido.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = conductor.usuario?.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         conductor.usuario?.apellido.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          conductor.placa.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (conductor.telefono || '').includes(searchTerm);
+                         (conductor.usuario?.telefono || '').includes(searchTerm);
     const matchesStatus = statusFilter === 'all' || 
-                         (statusFilter === 'activo' && conductor.estado === 'activo') ||
-                         (statusFilter === 'inactivo' && conductor.estado !== 'activo');
+                         (statusFilter === 'activo' && conductor.activo) ||
+                         (statusFilter === 'inactivo' && !conductor.activo);
     return matchesSearch && matchesStatus;
   });
 
   const stats = {
     total: conductores.length,
-    activos: conductores.filter(c => c.estado === 'activo').length,
-    inactivos: conductores.filter(c => c.estado !== 'activo').length,
+    activos: conductores.filter(c => c.activo).length,
+    inactivos: conductores.filter(c => !c.activo).length,
   };
 
   const handleToggleStatus = async (conductor: Conductor) => {
-    const newStatus = conductor.estado === 'activo' ? 'inactivo' : 'activo';
-    await updateConductor(conductor.id, { estado: newStatus });
+    const newStatus = !conductor.activo;
+    await updateConductor(conductor.id, { activo: newStatus });
   };
 
   const getInitials = (nombre: string, apellido: string) => {
@@ -159,28 +159,28 @@ export function Conductores() {
               <CardHeader className="pb-3">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div className="flex items-center gap-3 flex-1">
-                    <Avatar className="h-12 w-12">
+                      <Avatar className="h-12 w-12">
                       <AvatarFallback className="bg-primary text-primary-foreground">
-                        {getInitials(conductor.nombre, conductor.apellido)}
+                        {getInitials(conductor.usuario?.nombre || '', conductor.usuario?.apellido || '')}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <CardTitle className="text-lg">
-                          {conductor.nombre} {conductor.apellido}
+                          {conductor.usuario?.nombre} {conductor.usuario?.apellido}
                         </CardTitle>
-                        <Badge variant={conductor.estado === 'activo' ? "default" : "secondary"}>
-                          {conductor.estado === 'activo' ? "Activo" : "Inactivo"}
+                        <Badge variant={conductor.activo ? "default" : "secondary"}>
+                          {conductor.activo ? "Activo" : "Inactivo"}
                         </Badge>
                       </div>
                       <CardDescription className="flex items-center gap-2 mt-1">
                         <span>Placa: {conductor.placa}</span>
-                        {conductor.telefono && (
+                        {conductor.usuario?.telefono && (
                           <>
                             <span>•</span>
                             <span className="flex items-center gap-1">
                               <Phone className="h-3 w-3" />
-                              {conductor.telefono}
+                              {conductor.usuario?.telefono}
                             </span>
                           </>
                         )}
@@ -205,12 +205,12 @@ export function Conductores() {
                       size="sm"
                       onClick={() => handleToggleStatus(conductor)}
                     >
-                      {conductor.estado === 'activo' ? (
+                      {conductor.activo ? (
                         <ToggleRight className="h-4 w-4 mr-1" />
                       ) : (
                         <ToggleLeft className="h-4 w-4 mr-1" />
                       )}
-                      {conductor.estado === 'activo' ? 'Desactivar' : 'Activar'}
+                      {conductor.activo ? 'Desactivar' : 'Activar'}
                     </Button>
                     <Button 
                       variant="outline" 

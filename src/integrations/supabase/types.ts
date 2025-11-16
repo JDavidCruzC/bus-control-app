@@ -174,6 +174,7 @@ export type Database = {
           id: string
           licencia_numero: string
           licencia_vencimiento: string | null
+          placa: string | null
           total_viajes: number | null
           updated_at: string | null
           usuario_id: string | null
@@ -187,6 +188,7 @@ export type Database = {
           id?: string
           licencia_numero: string
           licencia_vencimiento?: string | null
+          placa?: string | null
           total_viajes?: number | null
           updated_at?: string | null
           usuario_id?: string | null
@@ -200,6 +202,7 @@ export type Database = {
           id?: string
           licencia_numero?: string
           licencia_vencimiento?: string | null
+          placa?: string | null
           total_viajes?: number | null
           updated_at?: string | null
           usuario_id?: string | null
@@ -221,42 +224,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      conductors: {
-        Row: {
-          apellido: string
-          created_at: string
-          estado: string | null
-          id: string
-          nombre: string
-          placa: string
-          telefono: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          apellido: string
-          created_at?: string
-          estado?: string | null
-          id?: string
-          nombre: string
-          placa: string
-          telefono?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          apellido?: string
-          created_at?: string
-          estado?: string | null
-          id?: string
-          nombre?: string
-          placa?: string
-          telefono?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
       }
       configuraciones: {
         Row: {

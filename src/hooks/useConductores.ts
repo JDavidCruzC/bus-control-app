@@ -5,22 +5,29 @@ import { z } from 'zod';
 
 const conductorSchema = z.object({
   placa: z.string().trim().min(1, 'La placa es requerida').max(20, 'La placa no puede exceder 20 caracteres').toUpperCase(),
-  nombre: z.string().trim().min(1, 'El nombre es requerido').max(100, 'El nombre no puede exceder 100 caracteres'),
-  apellido: z.string().trim().min(1, 'El apellido es requerido').max(100, 'El apellido no puede exceder 100 caracteres'),
-  telefono: z.string().max(20, 'El teléfono no puede exceder 20 caracteres').optional(),
-  estado: z.string().max(20, 'El estado no puede exceder 20 caracteres')
+  licencia_numero: z.string().trim().min(1, 'La licencia es requerida').max(50),
+  activo: z.boolean().optional()
 });
 
 export type Conductor = {
   id: string;
-  user_id: string;
+  usuario_id: string;
+  vehiculo_id: string | null;
+  licencia_numero: string;
   placa: string;
-  nombre: string;
-  apellido: string;
-  telefono?: string;
-  estado: string;
+  licencia_vencimiento: string | null;
+  experiencia_años: number | null;
+  calificacion_promedio: number;
+  total_viajes: number;
+  activo: boolean;
   created_at: string;
   updated_at: string;
+  usuario?: {
+    nombre: string;
+    apellido: string;
+    telefono: string;
+    email: string;
+  };
 };
 
 export function useConductores() {
@@ -31,8 +38,11 @@ export function useConductores() {
   const fetchConductores = async () => {
     try {
       const { data, error } = await supabase
-        .from('conductors')
-        .select('*')
+        .from('conductores')
+        .select(`
+          *,
+          usuario:usuarios(nombre, apellido, telefono, email)
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -54,10 +64,13 @@ export function useConductores() {
       const validated = conductorSchema.partial().parse(updates) as Partial<Conductor>;
 
       const { data, error } = await supabase
-        .from('conductors')
+        .from('conductores')
         .update(validated)
         .eq('id', id)
-        .select()
+        .select(`
+          *,
+          usuario:usuarios(nombre, apellido, telefono, email)
+        `)
         .single();
 
       if (error) throw error;
