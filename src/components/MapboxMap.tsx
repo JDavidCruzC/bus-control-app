@@ -81,8 +81,8 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ selectedLayer, isRealTime }) => {
         map.current = new mapboxgl.Map({
           container: mapContainer.current!,
           style: 'mapbox://styles/mapbox/light-v11',
-          center: [-70.6693, -33.4489], // Santiago, Chile por defecto
-          zoom: 10,
+          center: [-79.92, -2.17], // Guayaquil, Ecuador por defecto
+          zoom: 12,
           pitch: 45,
         });
 
@@ -120,34 +120,78 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ selectedLayer, isRealTime }) => {
   // Load vehicles and paraderos data
   const loadData = async () => {
     try {
-      // Load vehicles with simulated location data
-      const { data: vehiclesData } = await supabase
-        .from('vehiculos')
-        .select('*');
+      // Load real-time vehicle locations from ubicaciones_tiempo_real
+      const { data: ubicacionesData } = await supabase
+        .from('ubicaciones_tiempo_real')
+        .select('*')
+        .order('timestamp_gps', { ascending: false });
 
-      if (vehiclesData) {
-        const vehiclesWithLocation = vehiclesData.map(v => ({
-          ...v,
-          latitud: -33.4489 + (Math.random() - 0.5) * 0.1,
-          longitud: -70.6693 + (Math.random() - 0.5) * 0.1,
-          velocidad: Math.floor(Math.random() * 60),
-          conductor_nombre: 'Conductor Asignado',
-          estado_operativo: v.activo ? 'en_servicio' : 'fuera_servicio'
-        }));
+      if (ubicacionesData && ubicacionesData.length > 0) {
+        // Group by vehiculo_id to get latest location for each vehicle
+        const latestLocations = new Map();
+        ubicacionesData.forEach((ub: any) => {
+          if (ub.vehiculo_id && !latestLocations.has(ub.vehiculo_id)) {
+            latestLocations.set(ub.vehiculo_id, ub);
+          }
+        });
+
+        // Get vehicle details
+        const vehiculoIds = Array.from(latestLocations.keys());
+        const { data: vehiculosData } = await supabase
+          .from('vehiculos')
+          .select('*')
+          .in('id', vehiculoIds);
+
+        const vehiclesWithLocation = Array.from(latestLocations.values())
+          .map((ub: any) => {
+            const vehiculo = vehiculosData?.find((v: any) => v.id === ub.vehiculo_id);
+            if (!vehiculo) return null;
+            return {
+              id: vehiculo.id,
+              placa: vehiculo.placa,
+              marca: vehiculo.marca,
+              modelo: vehiculo.modelo,
+              año: vehiculo.año,
+              color: vehiculo.color,
+              numero_interno: vehiculo.numero_interno,
+              capacidad_pasajeros: vehiculo.capacidad_pasajeros,
+              tiene_gps: vehiculo.tiene_gps ?? false,
+              tiene_aire: vehiculo.tiene_aire ?? false,
+              activo: vehiculo.activo ?? false,
+              empresa_id: vehiculo.empresa_id,
+              created_at: vehiculo.created_at,
+              updated_at: vehiculo.updated_at,
+              latitud: parseFloat(ub.latitud),
+              longitud: parseFloat(ub.longitud),
+              velocidad: ub.velocidad ? parseFloat(ub.velocidad) : 0,
+              conductor_nombre: 'Conductor Asignado',
+              estado_operativo: vehiculo.activo ? 'en_servicio' : 'fuera_servicio'
+            } as VehicleMapData;
+          })
+          .filter((v): v is VehicleMapData => v !== null);
+
         setVehicles(vehiclesWithLocation);
+
+        // Center map on first vehicle if available
+        if (vehiclesWithLocation.length > 0 && map.current) {
+          const firstVehicle = vehiclesWithLocation[0];
+          if (firstVehicle.latitud && firstVehicle.longitud) {
+            map.current.flyTo({
+              center: [firstVehicle.longitud, firstVehicle.latitud],
+              zoom: 13
+            });
+          }
+        }
       }
 
-      // Load paraderos
+      // Load paraderos (without fake passenger data)
       const { data: paraderosData } = await supabase
         .from('paraderos')
-        .select('*');
+        .select('*')
+        .eq('activo', true);
 
       if (paraderosData) {
-        const paraderosWithPassengers = paraderosData.map(p => ({
-          ...p,
-          pasajeros_esperando: Math.floor(Math.random() * 15)
-        }));
-        setParaderos(paraderosWithPassengers);
+        setParaderos(paraderosData);
       }
     } catch (error) {
       console.error('Error loading data:', error);
