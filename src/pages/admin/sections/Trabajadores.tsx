@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { TrabajadorDialog } from "@/components/admin/TrabajadorDialog";
 import { 
   Search, 
   Plus, 
@@ -41,6 +42,7 @@ export function Trabajadores() {
   const [searchTerm, setSearchTerm] = useState("");
   const [rolFilter, setRolFilter] = useState("todos");
   const [estadoFilter, setEstadoFilter] = useState("todos");
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   // Check if current user can view PII
   const canViewPII = userRole === 'administrador' || userRole === 'super_admin';
@@ -97,11 +99,13 @@ export function Trabajadores() {
             Administra los usuarios y empleados del sistema
           </p>
         </div>
-        <Button className="flex items-center gap-2">
+        <Button onClick={() => setDialogOpen(true)} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
           Nuevo Trabajador
         </Button>
       </div>
+
+      <TrabajadorDialog open={dialogOpen} onOpenChange={setDialogOpen} />
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

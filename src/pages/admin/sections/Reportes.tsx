@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ReporteDialog } from "@/components/admin/ReporteDialog";
 import { 
   Search, 
   AlertTriangle,
@@ -38,6 +39,7 @@ export function Reportes() {
   const [tipoFilter, setTipoFilter] = useState("todos");
   const [estadoFilter, setEstadoFilter] = useState("todos");
   const [prioridadFilter, setPrioridadFilter] = useState("todos");
+  const [reporteDialogOpen, setReporteDialogOpen] = useState(false);
 
   const filteredReportes = reportes.filter(reporte => {
     const matchesSearch = reporte.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -110,11 +112,13 @@ export function Reportes() {
             Monitorea incidentes y el rendimiento del sistema
           </p>
         </div>
-        <Button className="flex items-center gap-2">
+        <Button onClick={() => setReporteDialogOpen(true)} className="flex items-center gap-2">
           <BarChart3 className="h-4 w-4" />
           Generar Informe
         </Button>
       </div>
+
+      <ReporteDialog open={reporteDialogOpen} onOpenChange={setReporteDialogOpen} />
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

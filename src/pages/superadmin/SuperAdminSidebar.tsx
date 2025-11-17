@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { Building2, CreditCard, FileText, LayoutDashboard, LogOut } from "lucide-react";
+import { Building2, CreditCard, FileText, LayoutDashboard, LogOut, Key } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -35,6 +35,11 @@ const menuItems = [
     title: "Pagos",
     url: "/superadmin/pagos",
     icon: CreditCard,
+  },
+  {
+    title: "APIs",
+    url: "/superadmin/apis",
+    icon: Key,
   },
 ];
 

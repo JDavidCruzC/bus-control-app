@@ -1,10 +1,17 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { usePagos } from "@/hooks/usePagos";
 import { CreditCard } from "lucide-react";
 
 export function GestionPagos() {
   const { pagos, loading } = usePagos();
+  const [estadoFilter, setEstadoFilter] = useState("todos");
+
+  const filteredPagos = pagos.filter(p => 
+    estadoFilter === "todos" || p.estado === estadoFilter
+  );
 
   const getEstadoBadge = (estado: string) => {
     switch (estado) {
@@ -34,8 +41,35 @@ export function GestionPagos() {
         </p>
       </div>
 
+      <div className="flex gap-2">
+        <Button 
+          variant={estadoFilter === "todos" ? "default" : "outline"}
+          onClick={() => setEstadoFilter("todos")}
+        >
+          Todos
+        </Button>
+        <Button 
+          variant={estadoFilter === "completado" ? "default" : "outline"}
+          onClick={() => setEstadoFilter("completado")}
+        >
+          Completados
+        </Button>
+        <Button 
+          variant={estadoFilter === "pendiente" ? "default" : "outline"}
+          onClick={() => setEstadoFilter("pendiente")}
+        >
+          Pendientes
+        </Button>
+        <Button 
+          variant={estadoFilter === "fallido" ? "default" : "outline"}
+          onClick={() => setEstadoFilter("fallido")}
+        >
+          Fallidos
+        </Button>
+      </div>
+
       <div className="grid gap-4">
-        {pagos.map((pago) => (
+        {filteredPagos.map((pago) => (
           <Card key={pago.id}>
             <CardHeader>
               <div className="flex justify-between items-start">
@@ -79,7 +113,7 @@ export function GestionPagos() {
         ))}
       </div>
 
-      {pagos.length === 0 && (
+      {filteredPagos.length === 0 && (
         <Card>
           <CardContent className="text-center py-8">
             <CreditCard className="h-12 w-12 mx-auto text-muted-foreground mb-4" />

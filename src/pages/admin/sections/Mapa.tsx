@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { MapConfigDialog } from "@/components/admin/MapConfigDialog";
 import { 
   MapPin, 
   Navigation, 
@@ -24,6 +25,8 @@ import MapboxMap from "@/components/MapboxMap";
 export function Mapa() {
   const [selectedLayer, setSelectedLayer] = useState("vehiculos");
   const [isRealTime, setIsRealTime] = useState(true);
+  const [configOpen, setConfigOpen] = useState(false);
+  const [selectedRoute, setSelectedRoute] = useState<string | null>(null);
 
   // Datos de ejemplo para el mapa
   const vehiculosEnRuta = [
@@ -49,7 +52,7 @@ export function Mapa() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setConfigOpen(true)} className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             Configurar
           </Button>
@@ -63,6 +66,13 @@ export function Mapa() {
           </Button>
         </div>
       </div>
+
+      <MapConfigDialog 
+        open={configOpen} 
+        onOpenChange={setConfigOpen}
+        selectedRoute={selectedRoute}
+        onRouteChange={setSelectedRoute}
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
