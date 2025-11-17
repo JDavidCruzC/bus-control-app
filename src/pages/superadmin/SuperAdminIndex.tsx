@@ -4,6 +4,7 @@ import { SuperAdminDashboard } from "./SuperAdminDashboard";
 import { GestionEmpresas } from "./sections/GestionEmpresas";
 import { GestionMembresias } from "./sections/GestionMembresias";
 import { GestionPagos } from "./sections/GestionPagos";
+import { GestionAPIs } from "./sections/GestionAPIs";
 
 export default function SuperAdminIndex() {
   return (
@@ -26,6 +27,11 @@ export default function SuperAdminIndex() {
       <Route path="/pagos" element={
         <SuperAdminLayout>
           <GestionPagos />
+        </SuperAdminLayout>
+      } />
+      <Route path="/apis" element={
+        <SuperAdminLayout>
+          <GestionAPIs />
         </SuperAdminLayout>
       } />
     </Routes>

@@ -12,11 +12,14 @@ export function GestionEmpresas() {
   const { empresas, loading, refetch } = useEmpresas();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
+  const [estadoFilter, setEstadoFilter] = useState("todas");
 
-  const filteredEmpresas = empresas.filter(e =>
-    e.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (e.ruc && e.ruc.includes(searchTerm))
-  );
+  const filteredEmpresas = empresas.filter(e => {
+    const matchesSearch = e.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (e.ruc && e.ruc.includes(searchTerm));
+    const matchesEstado = estadoFilter === "todas" || e.estado_membresia === estadoFilter;
+    return matchesSearch && matchesEstado;
+  });
 
   const handleToggleEstado = async (empresaId: string, currentEstado: string) => {
     const newEstado = currentEstado === 'activa' ? 'suspendida' : 'activa';
@@ -79,6 +82,26 @@ export function GestionEmpresas() {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="max-w-sm"
         />
+        <div className="flex gap-2">
+          <Button 
+            variant={estadoFilter === "todas" ? "default" : "outline"}
+            onClick={() => setEstadoFilter("todas")}
+          >
+            Todas
+          </Button>
+          <Button 
+            variant={estadoFilter === "activa" ? "default" : "outline"}
+            onClick={() => setEstadoFilter("activa")}
+          >
+            Activas
+          </Button>
+          <Button 
+            variant={estadoFilter === "suspendida" ? "default" : "outline"}
+            onClick={() => setEstadoFilter("suspendida")}
+          >
+            Suspendidas
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4">

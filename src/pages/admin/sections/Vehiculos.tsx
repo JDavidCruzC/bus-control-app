@@ -54,15 +54,15 @@ export function Vehiculos() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Bus className="h-6 w-6 text-primary" />
-            Gestión de Vehículos
+            Gestión de Buses
           </h1>
           <p className="text-muted-foreground mt-1">
-            Administrar la flota de vehículos de transporte
+            Administrar la flota de buses de transporte
           </p>
         </div>
         <Button onClick={handleNew} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
-          Nuevo Vehículo
+          Nuevo Bus
         </Button>
       </div>
 

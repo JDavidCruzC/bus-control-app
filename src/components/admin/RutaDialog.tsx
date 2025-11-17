@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRutas, type Ruta } from "@/hooks/useRutas";
 import { RutaMapDrawer } from "./RutaMapDrawer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
 
 interface RutaDialogProps {
   open: boolean;
@@ -74,11 +75,36 @@ export function RutaDialog({ open, onOpenChange, ruta }: RutaDialogProps) {
 
     try {
       setLoading(true);
+      let rutaId = ruta?.id;
+      
       if (ruta) {
         await updateRuta(ruta.id, formData);
       } else {
-        await createRuta(formData);
+        const newRuta = await createRuta(formData);
+        rutaId = newRuta.id;
       }
+
+      // Save route geometry if coordinates exist
+      if (routeCoordinates.length >= 2 && rutaId) {
+        const wkt = `LINESTRING(${routeCoordinates.map(c => `${c[0]} ${c[1]}`).join(', ')})`;
+        
+        const { error: geomError } = await supabase
+          .from('rutas_geometria')
+          .upsert({
+            ruta_id: rutaId,
+            geom: wkt
+          });
+
+        if (geomError) {
+          console.error('Error saving geometry:', geomError);
+          toast({
+            title: "Advertencia",
+            description: "Ruta guardada pero la geometría no pudo guardarse",
+            variant: "destructive"
+          });
+        }
+      }
+
       onOpenChange(false);
       resetForm();
     } catch (error) {
