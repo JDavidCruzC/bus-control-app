@@ -14,6 +14,7 @@ import AdminIndex from "./pages/admin/AdminIndex";
 import ConductorIndex from "./pages/conductor/ConductorIndex";
 import SuperAdminIndex from "./pages/superadmin/SuperAdminIndex";
 import EmpresaAuth from "./pages/empresa/EmpresaAuth";
+import EmpresaIndex from "./pages/empresa/EmpresaIndex";
 import PublicRoutes from "./pages/PublicRoutes";
 import ConsultarRutas from "./pages/public/ConsultarRutas";
 import UbicacionTiempoReal from "./pages/public/UbicacionTiempoReal";
@@ -38,6 +39,7 @@ const App = () => (
                 <Route path="/admin/*" element={<AdminIndex />} />
                 <Route path="/superadmin/*" element={<SuperAdminIndex />} />
                 <Route path="/empresa/auth" element={<EmpresaAuth />} />
+                <Route path="/empresa/*" element={<EmpresaIndex />} />
                 <Route path="/conductor/*" element={<ConductorIndex />} />
                 <Route path="/rutas-publicas" element={<PublicRoutes />} />
                 <Route path="/consultar-rutas" element={<ConsultarRutas />} />

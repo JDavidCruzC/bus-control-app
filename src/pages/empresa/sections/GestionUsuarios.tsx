@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { TrabajadorDialog } from "@/components/admin/TrabajadorDialog";
+import { UsuarioDialog } from "@/components/empresa/UsuarioDialog";
 import { 
   Search, 
   Plus, 
@@ -18,7 +18,8 @@ import {
   Edit,
   Phone,
   Mail,
-  Calendar
+  Calendar,
+  Shield
 } from "lucide-react";
 import {
   Select,
@@ -36,17 +37,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-export function Trabajadores() {
+export function GestionUsuarios() {
   const { usuarios, loading, updateUsuario } = useUsuarios();
   const { userRole } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [rolFilter, setRolFilter] = useState("todos");
   const [estadoFilter, setEstadoFilter] = useState("todos");
   const [dialogOpen, setDialogOpen] = useState(false);
-
-  // Check if current user can manage users
-  const canManageUsers = userRole === 'gerente' || userRole === 'super_admin';
-  const canViewPII = userRole === 'administrador' || userRole === 'gerente' || userRole === 'super_admin';
+  const [selectedUsuario, setSelectedUsuario] = useState<any>(null);
 
   const filteredUsuarios = usuarios.filter(usuario => {
     const matchesSearch = usuario.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -65,6 +63,16 @@ export function Trabajadores() {
     await updateUsuario(id, { activo: !activo });
   };
 
+  const handleEdit = (usuario: any) => {
+    setSelectedUsuario(usuario);
+    setDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+    setSelectedUsuario(null);
+  };
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString('es-ES');
@@ -72,6 +80,19 @@ export function Trabajadores() {
 
   const getInitials = (nombre: string, apellido?: string) => {
     return `${nombre[0]}${apellido?.[0] || ''}`.toUpperCase();
+  };
+
+  const getRoleColor = (roleName?: string) => {
+    switch (roleName) {
+      case 'gerente':
+        return 'bg-purple-500/10 text-purple-700 dark:text-purple-400';
+      case 'administrador':
+        return 'bg-blue-500/10 text-blue-700 dark:text-blue-400';
+      case 'conductor':
+        return 'bg-green-500/10 text-green-700 dark:text-green-400';
+      default:
+        return 'bg-gray-500/10 text-gray-700 dark:text-gray-400';
+    }
   };
 
   if (loading) {
@@ -90,30 +111,40 @@ export function Trabajadores() {
     );
   }
 
+  // Solo gerentes pueden ver esta sección
+  if (userRole !== 'gerente') {
+    return (
+      <div className="p-6 text-center">
+        <Shield className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+        <h3 className="text-lg font-semibold mb-2">Acceso Restringido</h3>
+        <p className="text-muted-foreground">
+          Solo los gerentes tienen acceso a la gestión de usuarios.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Gestión de Trabajadores</h1>
+          <h1 className="text-3xl font-bold text-foreground">Gestión de Usuarios</h1>
           <p className="text-muted-foreground">
-            Administra los usuarios y empleados del sistema
+            Administra los usuarios y roles de tu empresa
           </p>
         </div>
-        {canManageUsers && (
-          <Button onClick={() => setDialogOpen(true)} className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Nuevo Trabajador
-          </Button>
-        )}
-        {!canManageUsers && (
-          <Badge variant="secondary" className="text-sm">
-            Solo Lectura
-          </Badge>
-        )}
+        <Button onClick={() => setDialogOpen(true)} className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Nuevo Usuario
+        </Button>
       </div>
 
-      {canManageUsers && <TrabajadorDialog open={dialogOpen} onOpenChange={setDialogOpen} />}
+      <UsuarioDialog 
+        open={dialogOpen} 
+        onOpenChange={handleCloseDialog}
+        usuario={selectedUsuario}
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -123,7 +154,7 @@ export function Trabajadores() {
               <Users className="h-8 w-8 text-primary" />
               <div>
                 <p className="text-2xl font-bold">{usuarios.length}</p>
-                <p className="text-muted-foreground text-sm">Total Trabajadores</p>
+                <p className="text-muted-foreground text-sm">Total Usuarios</p>
               </div>
             </div>
           </CardContent>
@@ -157,14 +188,12 @@ export function Trabajadores() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-2">
-              <Calendar className="h-8 w-8 text-blue-500" />
+              <Shield className="h-8 w-8 text-purple-500" />
               <div>
-                <p className="text-2xl font-bold text-blue-600">
-                  {usuarios.filter(u => u.ultimo_login && 
-                    new Date(u.ultimo_login) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-                  ).length}
+                <p className="text-2xl font-bold text-purple-600">
+                  {usuarios.filter(u => u.rol?.nombre === 'gerente').length}
                 </p>
-                <p className="text-muted-foreground text-sm">Activos (7 días)</p>
+                <p className="text-muted-foreground text-sm">Gerentes</p>
               </div>
             </div>
           </CardContent>
@@ -212,12 +241,12 @@ export function Trabajadores() {
         </CardContent>
       </Card>
 
-      {/* Trabajadores Table */}
+      {/* Users Table */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Lista de Trabajadores
+            Lista de Usuarios
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -242,38 +271,32 @@ export function Trabajadores() {
                           {getInitials(usuario.nombre, usuario.apellido)}
                         </AvatarFallback>
                       </Avatar>
-                       <div>
+                      <div>
                         <p className="font-medium">{usuario.nombre} {usuario.apellido}</p>
-                        {canViewPII && usuario.email && (
-                          <p className="text-sm text-muted-foreground">{usuario.email}</p>
-                        )}
+                        <p className="text-sm text-muted-foreground">{usuario.email}</p>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary">
+                    <Badge className={getRoleColor(usuario.rol?.nombre)}>
                       {usuario.rol?.nombre || 'Sin rol'}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {canViewPII ? (
-                      <div className="space-y-1">
-                        {usuario.email && (
-                          <div className="flex items-center gap-1 text-sm">
-                            <Mail className="h-3 w-3" />
-                            {usuario.email}
-                          </div>
-                        )}
-                        {usuario.telefono && (
-                          <div className="flex items-center gap-1 text-sm">
-                            <Phone className="h-3 w-3" />
-                            {usuario.telefono}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">Restringido</p>
-                    )}
+                    <div className="space-y-1">
+                      {usuario.email && (
+                        <div className="flex items-center gap-1 text-sm">
+                          <Mail className="h-3 w-3" />
+                          {usuario.email}
+                        </div>
+                      )}
+                      {usuario.telefono && (
+                        <div className="flex items-center gap-1 text-sm">
+                          <Phone className="h-3 w-3" />
+                          {usuario.telefono}
+                        </div>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {formatDate(usuario.ultimo_login)}
@@ -284,22 +307,22 @@ export function Trabajadores() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {canManageUsers ? (
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant={usuario.activo ? "destructive" : "default"}
-                          size="sm"
-                          onClick={() => toggleEstado(usuario.id, usuario.activo)}
-                        >
-                          {usuario.activo ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
-                        </Button>
-                      </div>
-                    ) : (
-                      <Badge variant="secondary" className="text-xs">Solo lectura</Badge>
-                    )}
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleEdit(usuario)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant={usuario.activo ? "destructive" : "default"}
+                        size="sm"
+                        onClick={() => toggleEstado(usuario.id, usuario.activo)}
+                      >
+                        {usuario.activo ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -309,11 +332,11 @@ export function Trabajadores() {
           {filteredUsuarios.length === 0 && (
             <div className="py-12 text-center">
               <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No se encontraron trabajadores</h3>
+              <h3 className="text-lg font-semibold mb-2">No se encontraron usuarios</h3>
               <p className="text-muted-foreground">
                 {searchTerm || rolFilter !== "todos" || estadoFilter !== "todos"
                   ? "Intenta ajustar los filtros de búsqueda"
-                  : "Comienza agregando trabajadores al sistema"
+                  : "Comienza agregando usuarios al sistema"
                 }
               </p>
             </div>

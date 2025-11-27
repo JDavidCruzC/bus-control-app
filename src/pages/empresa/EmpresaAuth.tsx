@@ -44,12 +44,28 @@ export default function EmpresaAuth() {
 
       if (error) throw error;
 
-      toast({
-        title: "Inicio de sesión exitoso",
-        description: "Bienvenido de nuevo",
-      });
+      // Obtener los datos del usuario para determinar el rol
+      if (data.user) {
+        const { data: userData } = await supabase
+          .from('usuarios')
+          .select('rol:roles(nombre)')
+          .eq('id', data.user.id)
+          .single();
 
-      navigate("/admin");
+        toast({
+          title: "Inicio de sesión exitoso",
+          description: "Bienvenido de nuevo",
+        });
+
+        // Redirigir según el rol
+        if (userData?.rol?.nombre === 'gerente') {
+          navigate("/empresa/dashboard");
+        } else if (userData?.rol?.nombre === 'administrador') {
+          navigate("/admin");
+        } else {
+          navigate("/admin"); // fallback
+        }
+      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -115,16 +131,16 @@ export default function EmpresaAuth() {
 
       if (empresaError) throw empresaError;
 
-      // Obtener rol de administrador
+      // Obtener rol de gerente (no administrador)
       const { data: rolData, error: rolError } = await supabase
         .from('roles')
         .select('id')
-        .eq('nombre', 'administrador')
+        .eq('nombre', 'gerente')
         .single();
 
       if (rolError) throw rolError;
 
-      // Crear usuario en la tabla usuarios
+      // Crear usuario en la tabla usuarios con rol de gerente
       const { error: usuarioError } = await supabase
         .from('usuarios')
         .insert([{
@@ -138,12 +154,29 @@ export default function EmpresaAuth() {
 
       if (usuarioError) throw usuarioError;
 
-      toast({
-        title: "Registro exitoso",
-        description: "Tu cuenta ha sido creada. Tienes 7 días de prueba gratuita.",
+      // Auto-login después del registro exitoso
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email: validation.data.email,
+        password: validation.data.password
       });
 
-      navigate("/admin");
+      if (loginError) {
+        toast({
+          title: "Advertencia",
+          description: "Empresa creada pero error al iniciar sesión. Por favor inicia sesión manualmente.",
+          variant: "destructive",
+        });
+        navigate('/empresa/auth');
+        return;
+      }
+
+      toast({
+        title: "Registro exitoso",
+        description: "Tu empresa ha sido creada. Tienes 7 días de prueba gratuita. ¡Bienvenido!",
+      });
+
+      // Redirigir al módulo empresa (gerente)
+      navigate("/empresa/dashboard");
     } catch (error: any) {
       toast({
         title: "Error",
