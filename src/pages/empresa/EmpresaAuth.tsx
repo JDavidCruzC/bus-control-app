@@ -106,7 +106,7 @@ export default function EmpresaAuth() {
           ruc: validation.data.ruc,
           telefono: validation.data.telefono,
           email: validation.data.email,
-          estado_membresia: 'trial',
+          estado_membresia: 'activa',
           tipo_plan: 'basico',
           fecha_vencimiento_membresia: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         }])
