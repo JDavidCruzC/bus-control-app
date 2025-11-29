@@ -50,27 +50,50 @@ export function useRutasConGeometria() {
       // Convertir coordenadas a formato WKT LINESTRING
       const wkt = `LINESTRING(${coordinates.map(c => `${c[0]} ${c[1]}`).join(', ')})`;
       
-      const { data, error } = await supabase
+      // Check if geometry already exists
+      const { data: existing } = await supabase
         .from('rutas_geometria')
-        .insert([{ 
-          ruta_id,
-          geom: wkt
-        }])
-        .select()
+        .select('id')
+        .eq('ruta_id', ruta_id)
         .single();
+
+      let data, error;
+      if (existing) {
+        // Update existing geometry
+        const result = await supabase
+          .from('rutas_geometria')
+          .update({ geom: wkt, updated_at: new Date().toISOString() })
+          .eq('ruta_id', ruta_id)
+          .select()
+          .single();
+        data = result.data;
+        error = result.error;
+      } else {
+        // Insert new geometry
+        const result = await supabase
+          .from('rutas_geometria')
+          .insert([{ 
+            ruta_id,
+            geom: wkt
+          }])
+          .select()
+          .single();
+        data = result.data;
+        error = result.error;
+      }
 
       if (error) throw error;
       
       await fetchRutasGeom();
       toast({
         title: "Éxito",
-        description: "Geometría de ruta guardada correctamente"
+        description: "Trayecto de línea guardado correctamente"
       });
       return data;
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "No se pudo guardar la geometría de la ruta",
+        description: error.message || "No se pudo guardar el trayecto de la línea",
         variant: "destructive"
       });
       throw error;
