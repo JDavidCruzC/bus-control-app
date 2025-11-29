@@ -40,6 +40,8 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
     cedula: "",
     rol_id: "",
     password: "",
+    codigo_usuario: "",
+    placa: "",
   });
 
   useEffect(() => {
@@ -56,6 +58,8 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
         cedula: usuario.cedula || "",
         rol_id: usuario.rol_id || "",
         password: "",
+        codigo_usuario: usuario.codigo_usuario || "",
+        placa: usuario.placa || "",
       });
     } else {
       setFormData({
@@ -66,6 +70,8 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
         cedula: "",
         rol_id: "",
         password: "",
+        codigo_usuario: "",
+        placa: "",
       });
     }
   }, [usuario, open]);
@@ -74,7 +80,7 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
     const { data } = await supabase
       .from('roles')
       .select('*')
-      .in('nombre', ['gerente', 'administrador', 'conductor'])
+      .in('nombre', ['gerente', 'administrador', 'conductor', 'cobrador'])
       .order('nombre');
     
     if (data) setRoles(data);
@@ -93,6 +99,19 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
       return;
     }
 
+    // Validar código/placa según el rol
+    const selectedRole = roles.find(r => r.id === formData.rol_id);
+    if (selectedRole) {
+      if (['conductor', 'cobrador'].includes(selectedRole.nombre) && !formData.placa) {
+        toast.error("La placa es obligatoria para conductores y cobradores");
+        return;
+      }
+      if (['administrador', 'gerente'].includes(selectedRole.nombre) && !formData.codigo_usuario) {
+        toast.error("El código de usuario es obligatorio");
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
@@ -107,10 +126,29 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
             telefono: formData.telefono,
             cedula: formData.cedula,
             rol_id: formData.rol_id,
+            codigo_usuario: formData.codigo_usuario,
           })
           .eq('id', usuario.id);
 
         if (error) throw error;
+
+        // Si es conductor o cobrador, actualizar la placa
+        const selectedRole = roles.find(r => r.id === formData.rol_id);
+        if (selectedRole && ['conductor', 'cobrador'].includes(selectedRole.nombre)) {
+          const { error: conductorError } = await supabase
+            .from('conductores')
+            .upsert({
+              usuario_id: usuario.id,
+              placa: formData.placa,
+              licencia_numero: formData.placa, // Usar placa como licencia temporalmente
+              activo: true,
+            }, {
+              onConflict: 'usuario_id'
+            });
+
+          if (conductorError) throw conductorError;
+        }
+
         toast.success("Usuario actualizado exitosamente");
       } else {
         // Create new user in auth
@@ -141,9 +179,26 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
             rol_id: formData.rol_id,
             empresa_id: userData?.empresa_id,
             activo: true,
+            codigo_usuario: formData.codigo_usuario,
           });
 
         if (dbError) throw dbError;
+
+        // Si es conductor o cobrador, crear registro en conductores
+        const selectedRole = roles.find(r => r.id === formData.rol_id);
+        if (selectedRole && ['conductor', 'cobrador'].includes(selectedRole.nombre)) {
+          const { error: conductorError } = await supabase
+            .from('conductores')
+            .insert({
+              usuario_id: authData.user.id,
+              placa: formData.placa,
+              licencia_numero: formData.placa, // Usar placa como licencia temporalmente
+              activo: true,
+            });
+
+          if (conductorError) throw conductorError;
+        }
+
         toast.success("Usuario creado exitosamente");
       }
 
@@ -253,6 +308,44 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
               </SelectContent>
             </Select>
           </div>
+
+          {/* Campo condicional: Código de Usuario o Placa */}
+          {formData.rol_id && (() => {
+            const selectedRole = roles.find(r => r.id === formData.rol_id);
+            if (selectedRole) {
+              if (['conductor', 'cobrador'].includes(selectedRole.nombre)) {
+                return (
+                  <div className="space-y-2">
+                    <Label htmlFor="placa">Placa *</Label>
+                    <Input
+                      id="placa"
+                      value={formData.placa}
+                      onChange={(e) => setFormData({ ...formData, placa: e.target.value.toUpperCase() })}
+                      placeholder="Ej: ABC-1234"
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      La placa será usada como código de acceso
+                    </p>
+                  </div>
+                );
+              } else if (['administrador', 'gerente'].includes(selectedRole.nombre)) {
+                return (
+                  <div className="space-y-2">
+                    <Label htmlFor="codigo_usuario">Código de Usuario *</Label>
+                    <Input
+                      id="codigo_usuario"
+                      value={formData.codigo_usuario}
+                      onChange={(e) => setFormData({ ...formData, codigo_usuario: e.target.value.toUpperCase() })}
+                      placeholder="Ej: ADM001"
+                      required
+                    />
+                  </div>
+                );
+              }
+            }
+            return null;
+          })()}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
