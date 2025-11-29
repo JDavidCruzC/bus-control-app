@@ -407,7 +407,6 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
                           <SelectValue placeholder="Selecciona una línea" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Sin asignar</SelectItem>
                           {rutas.map((ruta) => (
                             <SelectItem key={ruta.id} value={ruta.id}>
                               Línea {ruta.codigo} - {ruta.nombre}
@@ -436,12 +435,12 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="linea_admin">Línea de Bus Asignada (Opcional)</Label>
-                      <Select value={formData.linea_id} onValueChange={(value) => setFormData({ ...formData, linea_id: value })}>
+                      <Select value={formData.linea_id || "sin_asignar"} onValueChange={(value) => setFormData({ ...formData, linea_id: value === "sin_asignar" ? "" : value })}>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecciona una línea" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Sin asignar</SelectItem>
+                          <SelectItem value="sin_asignar">Sin asignar</SelectItem>
                           {rutas.map((ruta) => (
                             <SelectItem key={ruta.id} value={ruta.id}>
                               Línea {ruta.codigo} - {ruta.nombre}
