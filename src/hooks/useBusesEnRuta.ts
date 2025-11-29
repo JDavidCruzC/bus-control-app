@@ -107,7 +107,7 @@ export function useBusesEnRuta(empresaId?: string) {
 
   // Simular movimiento de buses (optimizado sin queries)
   useEffect(() => {
-    if (rutasGeomCache.length === 0) return;
+    if (rutasGeomCache.length === 0 || buses.length === 0) return;
 
     const interval = setInterval(() => {
       setBuses(prevBuses => 
@@ -142,10 +142,10 @@ export function useBusesEnRuta(empresaId?: string) {
           };
         })
       );
-    }, 1500); // Actualizar cada 1.5 segundos para movimiento más fluido
+    }, 2000); // Actualizar cada 2 segundos
 
     return () => clearInterval(interval);
-  }, [rutasGeomCache]);
+  }, [rutasGeomCache, buses.length]);
 
   useEffect(() => {
     inicializarBusesSimulados();
