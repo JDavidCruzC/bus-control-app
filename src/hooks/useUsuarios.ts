@@ -34,7 +34,7 @@ export function useUsuarios() {
     try {
       // Obtener la empresa del usuario actual
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No user found');
+      if (!user) throw new Error('Usuario no encontrado');
 
       const { data: currentUser } = await supabase
         .from('usuarios')
@@ -49,14 +49,19 @@ export function useUsuarios() {
         .from('usuarios')
         .select(`
           *,
-          rol:roles(*),
-          empresa:empresas(*)
+          rol:roles(*)
         `)
         .eq('empresa_id', currentUser.empresa_id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setUsuarios(data || []);
+
+      // Filtrar usuarios que no sean super_admin
+      const filteredData = (data || []).filter(usuario => 
+        usuario.rol?.nombre !== 'super_admin'
+      );
+
+      setUsuarios(filteredData);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -76,8 +81,7 @@ export function useUsuarios() {
         .eq('id', id)
         .select(`
           *,
-          rol:roles(*),
-          empresa:empresas(*)
+          rol:roles(*)
         `)
         .single();
 
