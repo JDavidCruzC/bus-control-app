@@ -116,6 +116,10 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
 
     try {
       if (usuario) {
+        // Determinar el rol seleccionado
+        const selectedRole = roles.find(r => r.id === formData.rol_id);
+        const esConductorOCobrador = selectedRole && ['conductor', 'cobrador'].includes(selectedRole.nombre);
+        
         // Update existing user
         const { error } = await supabase
           .from('usuarios')
@@ -126,15 +130,15 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
             telefono: formData.telefono,
             cedula: formData.cedula,
             rol_id: formData.rol_id,
-            codigo_usuario: formData.codigo_usuario,
+            // Si es conductor/cobrador, limpiar codigo_usuario. Si es admin/gerente, guardar el código
+            codigo_usuario: esConductorOCobrador ? null : formData.codigo_usuario,
           })
           .eq('id', usuario.id);
 
         if (error) throw error;
 
-        // Si es conductor o cobrador, actualizar la placa
-        const selectedRole = roles.find(r => r.id === formData.rol_id);
-        if (selectedRole && ['conductor', 'cobrador'].includes(selectedRole.nombre)) {
+        // Si es conductor o cobrador, gestionar la placa en tabla conductores
+        if (esConductorOCobrador) {
           // Verificar si ya existe un registro en conductores
           const { data: existingConductor } = await supabase
             .from('conductores')
@@ -166,6 +170,17 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
               });
 
             if (conductorError) throw conductorError;
+          }
+        } else {
+          // Si cambió de conductor/cobrador a admin/gerente, desactivar el registro en conductores
+          const { error: deactivateError } = await supabase
+            .from('conductores')
+            .update({ activo: false })
+            .eq('usuario_id', usuario.id);
+          
+          // No lanzar error si no existe el registro (puede no haber sido conductor antes)
+          if (deactivateError && !deactivateError.message.includes('no rows')) {
+            console.warn('Error al desactivar conductor:', deactivateError);
           }
         }
 
