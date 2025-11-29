@@ -193,9 +193,14 @@ export function Vehiculos() {
                         {vehiculo.activo ? "Activo" : "Inactivo"}
                       </Badge>
                     </div>
-                    <CardDescription className="mt-1">
+                     <CardDescription className="mt-1">
                       {vehiculo.marca && vehiculo.modelo ? `${vehiculo.marca} ${vehiculo.modelo}` : 'Sin información de marca/modelo'} 
                       {vehiculo.año && ` (${vehiculo.año})`}
+                      {(vehiculo as any).rutas && (
+                        <span className="block text-primary mt-1">
+                          Ruta: {(vehiculo as any).rutas.codigo} - {(vehiculo as any).rutas.nombre}
+                        </span>
+                      )}
                     </CardDescription>
                     <div className="flex gap-2 mt-2">
                       {vehiculo.tiene_gps && (

@@ -14,7 +14,8 @@ const vehiculoSchema = z.object({
   tiene_gps: z.boolean(),
   tiene_aire: z.boolean(),
   activo: z.boolean(),
-  empresa_id: z.string().uuid('ID de empresa inválido').optional()
+  empresa_id: z.string().uuid('ID de empresa inválido').optional(),
+  ruta_id: z.string().uuid('ID de ruta inválido').optional()
 });
 
 export type Vehiculo = {
@@ -30,6 +31,7 @@ export type Vehiculo = {
   tiene_aire: boolean;
   activo: boolean;
   empresa_id?: string;
+  ruta_id?: string;
   created_at: string;
   updated_at: string;
 };
@@ -43,7 +45,14 @@ export function useVehiculos() {
     try {
       const { data, error } = await supabase
         .from('vehiculos')
-        .select('*')
+        .select(`
+          *,
+          rutas (
+            id,
+            codigo,
+            nombre
+          )
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;

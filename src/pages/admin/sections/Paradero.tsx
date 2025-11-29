@@ -9,6 +9,8 @@ import { GestionRutasDialog } from "@/components/admin/GestionRutasDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { RutaSelector } from "@/components/admin/RutaSelector";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export function Paradero() {
   const { paraderos, loading, deleteParadero } = useParaderos();
@@ -16,6 +18,7 @@ export function Paradero() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<'all' | 'activo' | 'inactivo'>('all');
+  const [selectedRutaId, setSelectedRutaId] = useState<string>("");
 
   const filteredParaderos = paraderos.filter(paradero => {
     const matchesSearch = paradero.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -71,12 +74,44 @@ export function Paradero() {
             <Navigation className="h-4 w-4 mr-2" />
             Gestionar Rutas
           </Button>
-          <Button onClick={handleNew} className="flex-1 sm:flex-none">
+          <Button 
+            onClick={handleNew} 
+            className="flex-1 sm:flex-none"
+            disabled={!selectedRutaId}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Nuevo Paradero
           </Button>
         </div>
       </div>
+
+      {/* Route Selector */}
+      <Card>
+        <CardContent className="pt-6">
+          <RutaSelector
+            value={selectedRutaId}
+            onChange={setSelectedRutaId}
+            label="Selecciona la Ruta"
+            placeholder="Selecciona la ruta para gestionar sus paraderos"
+            showDescription={true}
+          />
+          {selectedRutaId && (
+            <Alert className="mt-4">
+              <Navigation className="h-4 w-4" />
+              <AlertDescription>
+                Estás gestionando paraderos para la ruta seleccionada. Los nuevos paraderos se crearán en esta ruta.
+              </AlertDescription>
+            </Alert>
+          )}
+          {!selectedRutaId && (
+            <Alert className="mt-4">
+              <AlertDescription>
+                Selecciona una ruta para ver y gestionar sus paraderos
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
@@ -278,6 +313,7 @@ export function Paradero() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         paradero={selectedParadero}
+        rutaId={selectedRutaId}
       />
 
       <GestionRutasDialog

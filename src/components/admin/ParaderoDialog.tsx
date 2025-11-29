@@ -14,6 +14,7 @@ interface ParaderoDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   paradero?: Paradero | null;
+  rutaId?: string;
 }
 
 export function ParaderoDialog({ open, onOpenChange, paradero }: ParaderoDialogProps) {
