@@ -17,7 +17,7 @@ interface ParaderoDialogProps {
   rutaId?: string;
 }
 
-export function ParaderoDialog({ open, onOpenChange, paradero }: ParaderoDialogProps) {
+export function ParaderoDialog({ open, onOpenChange, paradero, rutaId }: ParaderoDialogProps) {
   const { createParadero, updateParadero } = useParaderos();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -195,6 +195,7 @@ export function ParaderoDialog({ open, onOpenChange, paradero }: ParaderoDialogP
                 latitude={formData.latitud}
                 longitude={formData.longitud}
                 onLocationChange={handleLocationChange}
+                rutaId={rutaId}
               />
 
               <div className="grid grid-cols-2 gap-4 mt-4">

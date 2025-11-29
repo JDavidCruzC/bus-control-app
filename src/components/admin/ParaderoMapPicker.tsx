@@ -3,14 +3,16 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { supabase } from '@/integrations/supabase/client';
 import { useConfiguraciones } from '@/hooks/useConfiguraciones';
+import { useRutasConGeometria } from '@/hooks/useRutasConGeometria';
 
 interface ParaderoMapPickerProps {
   latitude: number;
   longitude: number;
   onLocationChange: (lat: number, lng: number) => void;
+  rutaId?: string;
 }
 
-export function ParaderoMapPicker({ latitude, longitude, onLocationChange }: ParaderoMapPickerProps) {
+export function ParaderoMapPicker({ latitude, longitude, onLocationChange, rutaId }: ParaderoMapPickerProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const marker = useRef<mapboxgl.Marker | null>(null);
@@ -18,6 +20,7 @@ export function ParaderoMapPicker({ latitude, longitude, onLocationChange }: Par
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const { getConfigValue } = useConfiguraciones();
+  const { rutasGeom } = useRutasConGeometria();
 
   // Get user's current location
   useEffect(() => {
@@ -108,6 +111,75 @@ export function ParaderoMapPicker({ latitude, longitude, onLocationChange }: Par
       map.current?.remove();
     };
   }, [mapToken, userLocation, getConfigValue]);
+
+  // Draw route on map if rutaId is provided
+  useEffect(() => {
+    if (!map.current || !rutaId || !rutasGeom.length) return;
+
+    const rutaGeom = rutasGeom.find(rg => rg.ruta_id === rutaId);
+    if (!rutaGeom || !rutaGeom.geom) return;
+
+    const addRouteToMap = (coordinates: [number, number][]) => {
+      if (!map.current || !map.current.isStyleLoaded()) return;
+
+      // Remove existing route layer if it exists
+      if (map.current.getLayer('route')) {
+        map.current.removeLayer('route');
+      }
+      if (map.current.getSource('route')) {
+        map.current.removeSource('route');
+      }
+
+      // Add route line
+      map.current.addSource('route', {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          properties: {},
+          geometry: {
+            type: 'LineString',
+            coordinates: coordinates,
+          },
+        },
+      });
+
+      map.current.addLayer({
+        id: 'route',
+        type: 'line',
+        source: 'route',
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round',
+        },
+        paint: {
+          'line-color': '#3B82F6',
+          'line-width': 4,
+          'line-opacity': 0.6,
+        },
+      });
+    };
+
+    try {
+      // Parse WKB geometry to GeoJSON
+      const geomText = rutaGeom.geom;
+      
+      if (typeof geomText === 'object' && geomText.coordinates) {
+        // Already GeoJSON format
+        const coordinates = geomText.coordinates as [number, number][];
+        if (coordinates.length >= 2) {
+          if (map.current.isStyleLoaded()) {
+            addRouteToMap(coordinates);
+          } else {
+            map.current.once('load', () => {
+              addRouteToMap(coordinates);
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error parsing route geometry:', error);
+    }
+  }, [rutaId, rutasGeom]);
 
   // Update marker position when props change
   useEffect(() => {
