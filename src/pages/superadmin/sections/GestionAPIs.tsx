@@ -31,7 +31,7 @@ export function GestionAPIs() {
         .upsert({
           clave: 'mapbox_token',
           valor: mapboxKey,
-          tipo: 'api_key',
+          tipo: 'string',
           descripcion: 'Token de acceso de Mapbox API',
           categoria: 'apis',
           empresa_id: null // Es una configuración global del super admin
