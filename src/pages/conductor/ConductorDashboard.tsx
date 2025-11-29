@@ -58,6 +58,7 @@ export default function ConductorDashboard() {
   const [viajeActual, setViajeActual] = useState<Viaje | null>(null);
   const [paraderos, setParaderos] = useState<Paradero[]>([]);
   const [proximoParadero, setProximoParadero] = useState<Paradero | null>(null);
+  const [rutaInfo, setRutaInfo] = useState<{ nombre: string; codigo: string } | null>(null);
   const [ubicacionActiva, setUbicacionActiva] = useState(false);
   const [loading, setLoading] = useState(true);
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
@@ -104,6 +105,17 @@ export default function ConductorDashboard() {
 
   const fetchParaderos = async (rutaId: string) => {
     try {
+      // Obtener información de la ruta
+      const { data: rutaData, error: rutaError } = await supabase
+        .from('rutas')
+        .select('nombre, codigo')
+        .eq('id', rutaId)
+        .single();
+
+      if (rutaError) throw rutaError;
+      setRutaInfo(rutaData);
+
+      // Obtener paraderos de la ruta
       const { data, error } = await supabase
         .from('rutas_paraderos')
         .select(`
@@ -474,13 +486,22 @@ export default function ConductorDashboard() {
         {paraderos.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                Paraderos de la Ruta
-              </CardTitle>
-              <CardDescription>
-                Recorrido completo con tiempos estimados
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5" />
+                    Paraderos de la Ruta
+                  </CardTitle>
+                  <CardDescription>
+                    Recorrido completo con tiempos estimados
+                  </CardDescription>
+                </div>
+                {rutaInfo && (
+                  <Badge variant="outline" className="text-base px-4 py-2">
+                    {rutaInfo.codigo} - {rutaInfo.nombre}
+                  </Badge>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {proximoParadero && (
