@@ -25,17 +25,32 @@ export function GestionAPIs() {
 
     setLoading(true);
     try {
-      // En un escenario real, esto guardaría en Supabase Edge Function Secrets
-      // Por ahora mostramos un mensaje de éxito
+      // Guardar el token en configuraciones
+      const { error } = await supabase
+        .from('configuraciones')
+        .upsert({
+          clave: 'mapbox_token',
+          valor: mapboxKey,
+          tipo: 'api_key',
+          descripcion: 'Token de acceso de Mapbox API',
+          categoria: 'apis',
+          empresa_id: null // Es una configuración global del super admin
+        }, {
+          onConflict: 'clave'
+        });
+
+      if (error) throw error;
+
       toast({
         title: "Éxito",
-        description: "Clave de API de Mapbox guardada correctamente. Reinicia la aplicación para aplicar cambios.",
+        description: "Token de Mapbox actualizado. El token estará disponible inmediatamente.",
       });
       setMapboxKey("");
     } catch (error: any) {
+      console.error('Error guardando token:', error);
       toast({
         title: "Error",
-        description: "No se pudo guardar la clave de API",
+        description: error.message || "No se pudo guardar la clave de API",
         variant: "destructive"
       });
     } finally {
