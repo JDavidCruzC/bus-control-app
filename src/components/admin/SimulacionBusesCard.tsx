@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Bus, Play, Pause, MapPin, Gauge } from "lucide-react";
 import { useBusesSimulados } from "@/hooks/useBusesSimulados";
-import { useRutas } from "@/hooks/useRutas";
+import { useLineasBuses } from "@/hooks/useLineasBuses";
 import { Progress } from "@/components/ui/progress";
 
 interface SimulacionBusesCardProps {
@@ -13,7 +13,7 @@ interface SimulacionBusesCardProps {
 
 export function SimulacionBusesCard({ rutaId }: SimulacionBusesCardProps) {
   const { buses, loading, updateBusSimulado } = useBusesSimulados(rutaId);
-  const { rutas } = useRutas();
+  const { lineasBuses } = useLineasBuses();
   const [simulationActive, setSimulationActive] = useState(false);
 
   // Simulación de movimiento de buses
@@ -89,7 +89,7 @@ export function SimulacionBusesCard({ rutaId }: SimulacionBusesCardProps) {
         ) : (
           <div className="space-y-4">
             {activeBuses.map((bus) => {
-              const ruta = rutas.find(r => r.id === bus.ruta_id);
+              const linea = lineasBuses.find(l => l.id === bus.ruta_id);
               
               return (
                 <div key={bus.id} className="p-4 border rounded-lg space-y-3">
@@ -99,7 +99,7 @@ export function SimulacionBusesCard({ rutaId }: SimulacionBusesCardProps) {
                       <div>
                         <p className="font-semibold">{bus.nombre_simulado}</p>
                         <p className="text-sm text-muted-foreground">
-                          {ruta?.codigo || 'Sin ruta'} - {ruta?.nombre || 'N/A'}
+                          {linea ? `Línea ${linea.codigo} - ${linea.nombre}` : 'Sin línea asignada'}
                         </p>
                       </div>
                     </div>

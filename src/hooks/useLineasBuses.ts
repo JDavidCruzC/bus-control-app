@@ -3,8 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 
-const rutaSchema = z.object({
-  codigo: z.string().trim().min(1, 'El código es requerido').max(20, 'El código no puede exceder 20 caracteres'),
+const lineaBusSchema = z.object({
+  codigo: z.string().trim().min(1, 'El código de la línea es requerido').max(20, 'El código no puede exceder 20 caracteres'),
   nombre: z.string().trim().min(1, 'El nombre es requerido').max(100, 'El nombre no puede exceder 100 caracteres'),
   descripcion: z.string().max(500, 'La descripción no puede exceder 500 caracteres').optional(),
   distancia_km: z.number().min(0, 'Distancia inválida').max(10000, 'Distancia inválida').optional(),
@@ -14,7 +14,7 @@ const rutaSchema = z.object({
   empresa_id: z.string().uuid('ID de empresa inválido').optional()
 });
 
-export type Ruta = {
+export type LineaBus = {
   id: string;
   codigo: string;
   nombre: string;
@@ -28,12 +28,12 @@ export type Ruta = {
   updated_at: string;
 };
 
-export function useRutas() {
-  const [rutas, setRutas] = useState<Ruta[]>([]);
+export function useLineasBuses() {
+  const [lineasBuses, setLineasBuses] = useState<LineaBus[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const fetchRutas = async () => {
+  const fetchLineasBuses = async () => {
     try {
       const { data, error } = await supabase
         .from('rutas')
@@ -41,11 +41,11 @@ export function useRutas() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setRutas(data || []);
+      setLineasBuses(data || []);
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "No se pudieron cargar las rutas",
+        description: "No se pudieron cargar las líneas de buses",
         variant: "destructive"
       });
     } finally {
@@ -53,10 +53,10 @@ export function useRutas() {
     }
   };
 
-  const createRuta = async (ruta: Omit<Ruta, 'id' | 'created_at' | 'updated_at'>) => {
+  const createLineaBus = async (lineaBus: Omit<LineaBus, 'id' | 'created_at' | 'updated_at'>) => {
     try {
       // Validate input
-      const validated = rutaSchema.parse(ruta) as Omit<Ruta, 'id' | 'created_at' | 'updated_at'>;
+      const validated = lineaBusSchema.parse(lineaBus) as Omit<LineaBus, 'id' | 'created_at' | 'updated_at'>;
 
       const { data, error } = await supabase
         .from('rutas')
@@ -66,26 +66,26 @@ export function useRutas() {
 
       if (error) throw error;
       
-      setRutas(prev => [data, ...prev]);
+      setLineasBuses(prev => [data, ...prev]);
       toast({
         title: "Éxito",
-        description: "Ruta creada correctamente"
+        description: "Línea de bus creada correctamente"
       });
       return data;
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "No se pudo crear la ruta",
+        description: "No se pudo crear la línea de bus",
         variant: "destructive"
       });
       throw error;
     }
   };
 
-  const updateRuta = async (id: string, updates: Partial<Ruta>) => {
+  const updateLineaBus = async (id: string, updates: Partial<LineaBus>) => {
     try {
       // Validate input - only validate fields that are being updated
-      const validated = rutaSchema.partial().parse(updates) as Partial<Ruta>;
+      const validated = lineaBusSchema.partial().parse(updates) as Partial<LineaBus>;
 
       const { data, error } = await supabase
         .from('rutas')
@@ -96,16 +96,16 @@ export function useRutas() {
 
       if (error) throw error;
 
-      setRutas(prev => prev.map(r => r.id === id ? data : r));
+      setLineasBuses(prev => prev.map(r => r.id === id ? data : r));
       toast({
         title: "Éxito",
-        description: "Ruta actualizada correctamente"
+        description: "Línea de bus actualizada correctamente"
       });
       return data;
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "No se pudo actualizar la ruta",
+        description: "No se pudo actualizar la línea de bus",
         variant: "destructive"
       });
       throw error;
@@ -113,14 +113,14 @@ export function useRutas() {
   };
 
   useEffect(() => {
-    fetchRutas();
+    fetchLineasBuses();
   }, []);
 
   return {
-    rutas,
+    lineasBuses,
     loading,
-    createRuta,
-    updateRuta,
-    refetch: fetchRutas
+    createLineaBus,
+    updateLineaBus,
+    refetch: fetchLineasBuses
   };
 }

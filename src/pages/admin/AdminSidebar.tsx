@@ -35,7 +35,7 @@ const adminItems = [
   { title: "Trabajadores", url: "/admin/trabajadores", icon: Users },
   { title: "Conductores", url: "/admin/conductores", icon: UserCheck },
   { title: "Vehículos", url: "/admin/vehiculos", icon: Bus },
-  { title: "Rutas", url: "/admin/rutas", icon: FileText },
+  { title: "Líneas", url: "/admin/lineas", icon: FileText },
   { title: "Desvíos", url: "/admin/desvios", icon: AlertTriangle },
   { title: "Reportes", url: "/admin/reportes", icon: FileText },
 ];

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useParaderos } from "@/hooks/useParaderos";
-import { useRutas } from "@/hooks/useRutas";
+import { useLineasBuses } from "@/hooks/useLineasBuses";
 import { useRutasConGeometria } from "@/hooks/useRutasConGeometria";
 import { RutaMapDrawer } from "./RutaMapDrawer";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,7 +20,7 @@ interface GestionRutasDialogProps {
 export function GestionRutasDialog({ open, onOpenChange }: GestionRutasDialogProps) {
   const { toast } = useToast();
   const { paraderos } = useParaderos();
-  const { rutas } = useRutas();
+  const { lineasBuses } = useLineasBuses();
   const { createRutaGeom, updateRutaGeom } = useRutasConGeometria();
   const [selectedRutaId, setSelectedRutaId] = useState<string>('');
   const [routeCoordinates, setRouteCoordinates] = useState<[number, number][]>([]);
@@ -99,7 +99,7 @@ export function GestionRutasDialog({ open, onOpenChange }: GestionRutasDialogPro
     setSelectedParaderos([]);
   };
 
-  const selectedRuta = rutas.find(r => r.id === selectedRutaId);
+  const selectedLinea = lineasBuses.find(l => l.id === selectedRutaId);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -107,41 +107,41 @@ export function GestionRutasDialog({ open, onOpenChange }: GestionRutasDialogPro
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Route className="h-5 w-5 text-primary" />
-            Gestionar Ruta Completa
+            Gestionar Trayecto de Línea
           </DialogTitle>
           <DialogDescription>
-            Selecciona una ruta y traza su recorrido en el mapa. Los paraderos cercanos se detectarán automáticamente.
+            Selecciona una línea de bus y traza su trayecto en el mapa. Los paraderos cercanos se detectarán automáticamente.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Selector de Ruta */}
+          {/* Selector de Línea */}
           <div className="space-y-2">
-            <Label>Seleccionar Ruta</Label>
+            <Label>Seleccionar Línea de Bus</Label>
             <Select value={selectedRutaId} onValueChange={setSelectedRutaId}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecciona una ruta" />
+                <SelectValue placeholder="Selecciona una línea" />
               </SelectTrigger>
               <SelectContent>
-                {rutas.map(ruta => (
-                  <SelectItem key={ruta.id} value={ruta.id}>
-                    {ruta.codigo} - {ruta.nombre}
+                {lineasBuses.map(linea => (
+                  <SelectItem key={linea.id} value={linea.id}>
+                    Línea {linea.codigo} - {linea.nombre}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {selectedRuta && (
+          {selectedLinea && (
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-semibold">{selectedRuta.nombre}</h3>
-                    <p className="text-sm text-muted-foreground">{selectedRuta.codigo}</p>
+                    <h3 className="font-semibold">Línea {selectedLinea.codigo}</h3>
+                    <p className="text-sm text-muted-foreground">{selectedLinea.nombre}</p>
                   </div>
-                  <Badge variant={selectedRuta.activo ? "default" : "secondary"}>
-                    {selectedRuta.activo ? 'Activa' : 'Inactiva'}
+                  <Badge variant={selectedLinea.activo ? "default" : "secondary"}>
+                    {selectedLinea.activo ? 'Activa' : 'Inactiva'}
                   </Badge>
                 </div>
               </CardContent>

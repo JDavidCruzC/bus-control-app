@@ -9,7 +9,7 @@ import { GestionRutasDialog } from "@/components/admin/GestionRutasDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RutaSelector } from "@/components/admin/RutaSelector";
+import { LineaBusSelector } from "@/components/admin/LineaBusSelector";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export function Paradero() {
@@ -18,7 +18,7 @@ export function Paradero() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<'all' | 'activo' | 'inactivo'>('all');
-  const [selectedRutaId, setSelectedRutaId] = useState<string>("");
+  const [selectedLineaId, setSelectedLineaId] = useState<string>("");
 
   const filteredParaderos = paraderos.filter(paradero => {
     const matchesSearch = paradero.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -77,7 +77,7 @@ export function Paradero() {
           <Button 
             onClick={handleNew} 
             className="flex-1 sm:flex-none"
-            disabled={!selectedRutaId}
+            disabled={!selectedLineaId}
           >
             <Plus className="h-4 w-4 mr-2" />
             Nuevo Paradero
@@ -85,28 +85,28 @@ export function Paradero() {
         </div>
       </div>
 
-      {/* Route Selector */}
+      {/* Line Selector */}
       <Card>
         <CardContent className="pt-6">
-          <RutaSelector
-            value={selectedRutaId}
-            onChange={setSelectedRutaId}
-            label="Selecciona la Ruta"
-            placeholder="Selecciona la ruta para gestionar sus paraderos"
+          <LineaBusSelector
+            value={selectedLineaId}
+            onChange={setSelectedLineaId}
+            label="Selecciona la Línea de Bus"
+            placeholder="Selecciona la línea para gestionar sus paraderos"
             showDescription={true}
           />
-          {selectedRutaId && (
+          {selectedLineaId && (
             <Alert className="mt-4">
               <Navigation className="h-4 w-4" />
               <AlertDescription>
-                Estás gestionando paraderos para la ruta seleccionada. Los nuevos paraderos se crearán en esta ruta.
+                Estás gestionando paraderos para la línea seleccionada. Los nuevos paraderos se crearán en esta línea.
               </AlertDescription>
             </Alert>
           )}
-          {!selectedRutaId && (
+          {!selectedLineaId && (
             <Alert className="mt-4">
               <AlertDescription>
-                Selecciona una ruta para ver y gestionar sus paraderos
+                Selecciona una línea para ver y gestionar sus paraderos
               </AlertDescription>
             </Alert>
           )}
@@ -313,7 +313,7 @@ export function Paradero() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         paradero={selectedParadero}
-        rutaId={selectedRutaId}
+        rutaId={selectedLineaId}
       />
 
       <GestionRutasDialog

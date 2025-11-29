@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useVehiculos, type Vehiculo } from "@/hooks/useVehiculos";
-import { useRutas } from "@/hooks/useRutas";
+import { useLineasBuses } from "@/hooks/useLineasBuses";
 
 interface VehiculoDialogProps {
   open: boolean;
@@ -17,7 +17,7 @@ interface VehiculoDialogProps {
 
 export function VehiculoDialog({ open, onOpenChange, vehiculo }: VehiculoDialogProps) {
   const { createVehiculo, updateVehiculo } = useVehiculos();
-  const { rutas } = useRutas();
+  const { lineasBuses } = useLineasBuses();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
@@ -67,7 +67,7 @@ export function VehiculoDialog({ open, onOpenChange, vehiculo }: VehiculoDialogP
     if (!formData.ruta_id) {
       toast({
         title: "Error",
-        description: "Debes asignar una ruta al bus",
+        description: "Debes asignar una línea al bus",
         variant: "destructive"
       });
       return;
@@ -124,24 +124,24 @@ export function VehiculoDialog({ open, onOpenChange, vehiculo }: VehiculoDialogP
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="ruta">Ruta Asignada *</Label>
+            <Label htmlFor="ruta">Línea Asignada *</Label>
             <Select
               value={formData.ruta_id}
               onValueChange={(value) => setFormData({ ...formData, ruta_id: value })}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Selecciona la ruta del bus" />
+                <SelectValue placeholder="Selecciona la línea del bus" />
               </SelectTrigger>
               <SelectContent>
-                {rutas.filter(r => r.activo).map((ruta) => (
-                  <SelectItem key={ruta.id} value={ruta.id}>
-                    {ruta.codigo} - {ruta.nombre}
+                {lineasBuses.filter(l => l.activo).map((linea) => (
+                  <SelectItem key={linea.id} value={linea.id}>
+                    Línea {linea.codigo} - {linea.nombre}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              Cada bus opera en una sola ruta
+              Cada bus opera en una sola línea
             </p>
           </div>
 

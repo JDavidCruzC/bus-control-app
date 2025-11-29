@@ -4,7 +4,7 @@ import { AdminDashboard } from "./AdminDashboard";
 import { Paradero } from "./sections/Paradero";
 import { Vehiculos } from "./sections/Vehiculos";
 import { Conductores } from "./sections/Conductores";
-import { Rutas } from "./sections/Rutas";
+import { LineasBuses } from "./sections/LineasBuses";
 import { Trabajadores } from "./sections/Trabajadores";
 import { Reportes } from "./sections/Reportes";
 import { Mapa } from "./sections/Mapa";
@@ -50,9 +50,9 @@ export default function AdminIndex() {
           <Vehiculos />
         </AdminLayout>
       } />
-      <Route path="/rutas" element={
+      <Route path="/lineas" element={
         <AdminLayout>
-          <Rutas />
+          <LineasBuses />
         </AdminLayout>
       } />
       <Route path="/reportes" element={
