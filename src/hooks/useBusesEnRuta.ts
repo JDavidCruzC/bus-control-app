@@ -105,7 +105,7 @@ export function useBusesEnRuta(empresaId?: string) {
     }
   };
 
-  // Simular movimiento de buses (optimizado sin queries)
+  // Simular movimiento de buses con interpolación suave
   useEffect(() => {
     if (rutasGeomCache.length === 0 || buses.length === 0) return;
 
@@ -122,27 +122,37 @@ export function useBusesEnRuta(empresaId?: string) {
 
           if (coordinates.length < 2) return bus;
 
-          // Incrementar progreso suavemente
-          const incremento = (bus.velocidad / 60) * 0.8; // Movimiento más visible
-          let nuevoProgreso = (bus.progreso + incremento) % 100;
+          // Incremento más pequeño para movimiento suave (ajustado a velocidad real)
+          // Velocidad en km/h convertida a porcentaje de ruta por segundo
+          const incrementoPorSegundo = (bus.velocidad / 3600) * 0.5; // Más realista
+          let nuevoProgreso = (bus.progreso + incrementoPorSegundo) % 100;
 
-          // Calcular nueva posición en la ruta
-          const posicionEnRuta = Math.floor((coordinates.length - 1) * (nuevoProgreso / 100));
-          const coord = coordinates[Math.min(posicionEnRuta, coordinates.length - 1)];
+          // Calcular posición exacta con interpolación entre puntos
+          const posicionExacta = ((coordinates.length - 1) * nuevoProgreso) / 100;
+          const indiceInferior = Math.floor(posicionExacta);
+          const indiceSuperior = Math.min(indiceInferior + 1, coordinates.length - 1);
+          const factor = posicionExacta - indiceInferior; // Factor de interpolación (0-1)
 
-          // Variar velocidad ligeramente para realismo
-          const nuevaVelocidad = Math.max(20, Math.min(55, bus.velocidad + (Math.random() - 0.5) * 3));
+          // Interpolación lineal entre dos puntos consecutivos
+          const coordInferior = coordinates[indiceInferior];
+          const coordSuperior = coordinates[indiceSuperior];
+          
+          const longitudInterpolada = coordInferior[0] + (coordSuperior[0] - coordInferior[0]) * factor;
+          const latitudInterpolada = coordInferior[1] + (coordSuperior[1] - coordInferior[1]) * factor;
+
+          // Variar velocidad muy ligeramente para realismo
+          const nuevaVelocidad = Math.max(25, Math.min(50, bus.velocidad + (Math.random() - 0.5) * 2));
 
           return {
             ...bus,
-            latitud: coord[1],
-            longitud: coord[0],
+            latitud: latitudInterpolada,
+            longitud: longitudInterpolada,
             progreso: nuevoProgreso,
             velocidad: nuevaVelocidad
           };
         })
       );
-    }, 2000); // Actualizar cada 2 segundos
+    }, 1000); // Actualizar cada 1 segundo para movimiento más fluido
 
     return () => clearInterval(interval);
   }, [rutasGeomCache, buses.length]);
