@@ -13,6 +13,7 @@ interface AuthContextType {
   signInConductor: (placa: string, password: string) => Promise<{ error: any }>;
   signInClient: (email: string, password: string) => Promise<{ error: any }>;
   signInEmpresa: (email: string, password: string) => Promise<{ error: any }>;
+  signInSuperAdmin: (email: string, password: string) => Promise<{ error: any }>;
   signUpClient: (email: string, password: string, userData: any) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
@@ -195,6 +196,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   };
 
+  const signInSuperAdmin = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+    return { error };
+  };
+
   const signUpClient = async (email: string, password: string, clientData: any) => {
     const redirectUrl = `${window.location.origin}/`;
     
@@ -235,6 +244,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signInConductor,
     signInClient,
     signInEmpresa,
+    signInSuperAdmin,
     signUpClient,
     signOut
   };

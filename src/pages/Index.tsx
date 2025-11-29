@@ -28,7 +28,7 @@ const Index = () => {
             <Building2 className="mr-2 h-4 w-4" />
             Portal Empresas
           </Button>
-          <Button size="lg" variant="outline" onClick={() => navigate("/superadmin")}>
+          <Button size="lg" variant="outline" onClick={() => navigate("/auth/superadmin")}>
             <ShieldCheck className="mr-2 h-4 w-4" />
             Super Admin
           </Button>
