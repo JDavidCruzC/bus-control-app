@@ -320,7 +320,13 @@ export function GestionUsuarios() {
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="font-mono">
-                      {usuario.codigo_usuario || "N/A"}
+                      {(() => {
+                        const esConductorOCobrador = usuario.rol?.nombre === 'conductor' || usuario.rol?.nombre === 'cobrador';
+                        if (esConductorOCobrador) {
+                          return usuario.placa || "N/A";
+                        }
+                        return usuario.codigo_usuario || "N/A";
+                      })()}
                     </Badge>
                   </TableCell>
                   <TableCell>
