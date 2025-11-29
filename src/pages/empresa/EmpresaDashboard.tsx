@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUsuarios } from "@/hooks/useUsuarios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,15 +11,18 @@ import {
   Calendar,
   CreditCard,
   ArrowRight,
-  AlertCircle
+  AlertCircle,
+  DollarSign
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { PagoDialog } from "@/components/empresa/PagoDialog";
 
 export function EmpresaDashboard() {
   const { userData } = useAuth();
   const { usuarios } = useUsuarios();
   const navigate = useNavigate();
+  const [pagoDialogOpen, setPagoDialogOpen] = useState(false);
 
   const empresa = userData?.empresa;
   const usuariosActivos = usuarios.filter(u => u.activo).length;
@@ -174,6 +178,14 @@ export function EmpresaDashboard() {
               }
             </p>
           </div>
+          <Button 
+            onClick={() => setPagoDialogOpen(true)}
+            className="w-full"
+            variant="outline"
+          >
+            <DollarSign className="mr-2 h-4 w-4" />
+            Registrar Pago de Membresía
+          </Button>
         </CardContent>
       </Card>
 
@@ -206,6 +218,8 @@ export function EmpresaDashboard() {
           </Button>
         </CardContent>
       </Card>
+
+      <PagoDialog open={pagoDialogOpen} onOpenChange={setPagoDialogOpen} />
     </div>
   );
 }
