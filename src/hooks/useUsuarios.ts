@@ -31,6 +31,19 @@ export function useUsuarios() {
 
   const fetchUsuarios = async () => {
     try {
+      // Obtener la empresa del usuario actual
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+
+      const { data: currentUser } = await supabase
+        .from('usuarios')
+        .select('empresa_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!currentUser?.empresa_id) throw new Error('Usuario sin empresa');
+
+      // Obtener usuarios de la misma empresa
       const { data, error } = await supabase
         .from('usuarios')
         .select(`
@@ -38,6 +51,7 @@ export function useUsuarios() {
           rol:roles(*),
           empresa:empresas(*)
         `)
+        .eq('empresa_id', currentUser.empresa_id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
