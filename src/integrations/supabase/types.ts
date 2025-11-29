@@ -175,6 +175,7 @@ export type Database = {
           licencia_numero: string
           licencia_vencimiento: string | null
           placa: string | null
+          ruta_id: string | null
           total_viajes: number | null
           updated_at: string | null
           usuario_id: string | null
@@ -189,6 +190,7 @@ export type Database = {
           licencia_numero: string
           licencia_vencimiento?: string | null
           placa?: string | null
+          ruta_id?: string | null
           total_viajes?: number | null
           updated_at?: string | null
           usuario_id?: string | null
@@ -203,12 +205,20 @@ export type Database = {
           licencia_numero?: string
           licencia_vencimiento?: string | null
           placa?: string | null
+          ruta_id?: string | null
           total_viajes?: number | null
           updated_at?: string | null
           usuario_id?: string | null
           vehiculo_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "conductores_ruta_id_fkey"
+            columns: ["ruta_id"]
+            isOneToOne: false
+            referencedRelation: "rutas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "conductores_usuario_id_fkey"
             columns: ["usuario_id"]
@@ -1098,6 +1108,7 @@ export type Database = {
           modelo: string | null
           numero_interno: string | null
           placa: string
+          ruta_id: string | null
           tiene_aire: boolean | null
           tiene_gps: boolean | null
           updated_at: string | null
@@ -1114,6 +1125,7 @@ export type Database = {
           modelo?: string | null
           numero_interno?: string | null
           placa: string
+          ruta_id?: string | null
           tiene_aire?: boolean | null
           tiene_gps?: boolean | null
           updated_at?: string | null
@@ -1130,6 +1142,7 @@ export type Database = {
           modelo?: string | null
           numero_interno?: string | null
           placa?: string
+          ruta_id?: string | null
           tiene_aire?: boolean | null
           tiene_gps?: boolean | null
           updated_at?: string | null
@@ -1140,6 +1153,13 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehiculos_ruta_id_fkey"
+            columns: ["ruta_id"]
+            isOneToOne: false
+            referencedRelation: "rutas"
             referencedColumns: ["id"]
           },
         ]

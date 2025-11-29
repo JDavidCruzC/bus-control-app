@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useVehiculos, type Vehiculo } from "@/hooks/useVehiculos";
+import { useRutas } from "@/hooks/useRutas";
 
 interface VehiculoDialogProps {
   open: boolean;
@@ -15,6 +17,7 @@ interface VehiculoDialogProps {
 
 export function VehiculoDialog({ open, onOpenChange, vehiculo }: VehiculoDialogProps) {
   const { createVehiculo, updateVehiculo } = useVehiculos();
+  const { rutas } = useRutas();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
@@ -29,7 +32,26 @@ export function VehiculoDialog({ open, onOpenChange, vehiculo }: VehiculoDialogP
     tiene_gps: vehiculo?.tiene_gps || false,
     tiene_aire: vehiculo?.tiene_aire || false,
     activo: vehiculo?.activo ?? true,
+    ruta_id: vehiculo?.ruta_id || '',
   });
+
+  useEffect(() => {
+    if (vehiculo) {
+      setFormData({
+        placa: vehiculo.placa,
+        marca: vehiculo.marca || '',
+        modelo: vehiculo.modelo || '',
+        año: vehiculo.año || new Date().getFullYear(),
+        color: vehiculo.color || '',
+        numero_interno: vehiculo.numero_interno || '',
+        capacidad_pasajeros: vehiculo.capacidad_pasajeros || 40,
+        tiene_gps: vehiculo.tiene_gps,
+        tiene_aire: vehiculo.tiene_aire,
+        activo: vehiculo.activo,
+        ruta_id: vehiculo.ruta_id || '',
+      });
+    }
+  }, [vehiculo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +59,15 @@ export function VehiculoDialog({ open, onOpenChange, vehiculo }: VehiculoDialogP
       toast({
         title: "Error",
         description: "La placa es obligatoria",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!formData.ruta_id) {
+      toast({
+        title: "Error",
+        description: "Debes asignar una ruta al bus",
         variant: "destructive"
       });
       return;
@@ -70,6 +101,7 @@ export function VehiculoDialog({ open, onOpenChange, vehiculo }: VehiculoDialogP
       tiene_gps: false,
       tiene_aire: false,
       activo: true,
+      ruta_id: '',
     });
   };
 
@@ -91,6 +123,28 @@ export function VehiculoDialog({ open, onOpenChange, vehiculo }: VehiculoDialogP
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="ruta">Ruta Asignada *</Label>
+            <Select
+              value={formData.ruta_id}
+              onValueChange={(value) => setFormData({ ...formData, ruta_id: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecciona la ruta del bus" />
+              </SelectTrigger>
+              <SelectContent>
+                {rutas.filter(r => r.activo).map((ruta) => (
+                  <SelectItem key={ruta.id} value={ruta.id}>
+                    {ruta.codigo} - {ruta.nombre}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Cada bus opera en una sola ruta
+            </p>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="placa">Placa *</Label>
