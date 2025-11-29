@@ -173,8 +173,16 @@ export function Conductores() {
                           {conductor.activo ? "Activo" : "Inactivo"}
                         </Badge>
                       </div>
-                      <CardDescription className="flex items-center gap-2 mt-1">
+                      <CardDescription className="flex flex-wrap items-center gap-2 mt-1">
                         <span>Placa: {conductor.placa}</span>
+                        {conductor.ruta && (
+                          <>
+                            <span>•</span>
+                            <Badge variant="outline" className="text-xs">
+                              {conductor.ruta.codigo} - {conductor.ruta.nombre}
+                            </Badge>
+                          </>
+                        )}
                         {conductor.usuario?.telefono && (
                           <>
                             <span>•</span>

@@ -13,6 +13,7 @@ export type Conductor = {
   id: string;
   usuario_id: string;
   vehiculo_id: string | null;
+  ruta_id: string | null;
   licencia_numero: string;
   placa: string;
   licencia_vencimiento: string | null;
@@ -28,6 +29,10 @@ export type Conductor = {
     telefono: string;
     email: string;
   };
+  ruta?: {
+    nombre: string;
+    codigo: string;
+  };
 };
 
 export function useConductores() {
@@ -41,7 +46,8 @@ export function useConductores() {
         .from('conductores')
         .select(`
           *,
-          usuario:usuarios(nombre, apellido, telefono, email)
+          usuario:usuarios(nombre, apellido, telefono, email),
+          ruta:rutas(nombre, codigo)
         `)
         .order('created_at', { ascending: false });
 
@@ -69,7 +75,8 @@ export function useConductores() {
         .eq('id', id)
         .select(`
           *,
-          usuario:usuarios(nombre, apellido, telefono, email)
+          usuario:usuarios(nombre, apellido, telefono, email),
+          ruta:rutas(nombre, codigo)
         `)
         .single();
 
