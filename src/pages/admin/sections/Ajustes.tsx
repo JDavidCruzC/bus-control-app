@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConfiguraciones } from "@/hooks/useConfiguraciones";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,7 +44,9 @@ import {
 export function Ajustes() {
   const { userData } = useAuth();
   const { configuraciones, loading, updateConfiguracion } = useConfiguraciones();
+  const { toast } = useToast();
   const [hasChanges, setHasChanges] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
 
   // Estados locales para las configuraciones
@@ -53,6 +56,12 @@ export function Ajustes() {
     timezone: "America/Lima",
     idioma: "es",
     moneda: "PEN",
+    
+    // Mapa
+    map_default_lat: "-17.6396",
+    map_default_lng: "-71.3378",
+    map_default_zoom: "13",
+    use_geolocation: true,
     
     // Notificaciones
     notificaciones_email: true,
@@ -82,9 +91,37 @@ export function Ajustes() {
   };
 
   const handleSave = async () => {
-    // Aquí se guardarían las configuraciones
-    console.log("Guardando configuraciones:", config);
-    setHasChanges(false);
+    try {
+      setSaving(true);
+      
+      // Save map configuration
+      const configsToSave = [
+        { clave: 'map_default_lat', valor: config.map_default_lat, tipo: 'string', categoria: 'mapa', descripcion: 'Latitud por defecto del mapa' },
+        { clave: 'map_default_lng', valor: config.map_default_lng, tipo: 'string', categoria: 'mapa', descripcion: 'Longitud por defecto del mapa' },
+        { clave: 'map_default_zoom', valor: config.map_default_zoom, tipo: 'string', categoria: 'mapa', descripcion: 'Zoom por defecto del mapa' },
+      ];
+
+      for (const conf of configsToSave) {
+        const existing = configuraciones.find(c => c.clave === conf.clave);
+        if (existing) {
+          await updateConfiguracion(existing.id, { valor: conf.valor });
+        }
+      }
+
+      toast({
+        title: "Éxito",
+        description: "Configuraciones guardadas correctamente",
+      });
+      setHasChanges(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudieron guardar las configuraciones",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) {
@@ -112,11 +149,11 @@ export function Ajustes() {
         </div>
         <Button 
           onClick={handleSave} 
-          disabled={!hasChanges}
+          disabled={!hasChanges || saving}
           className="flex items-center gap-2"
         >
           <Save className="h-4 w-4" />
-          Guardar Cambios
+          {saving ? 'Guardando...' : 'Guardar Cambios'}
         </Button>
       </div>
 
@@ -126,9 +163,10 @@ export function Ajustes() {
       />
 
       <Tabs defaultValue="perfil" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="perfil">Mi Perfil</TabsTrigger>
           <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="mapa">Mapa</TabsTrigger>
           <TabsTrigger value="notificaciones">Notificaciones</TabsTrigger>
           <TabsTrigger value="seguridad">Seguridad</TabsTrigger>
           <TabsTrigger value="operaciones">Operaciones</TabsTrigger>
@@ -227,6 +265,102 @@ export function Ajustes() {
                   <p className="text-sm font-medium mb-2">Último acceso</p>
                   <p className="text-xs text-muted-foreground">
                     {userData?.ultimo_login ? new Date(userData.ultimo_login).toLocaleString('es-ES') : "N/A"}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Mapa */}
+        <TabsContent value="mapa">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Ubicación Por Defecto del Mapa
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="map_default_lat">Latitud Por Defecto</Label>
+                  <Input
+                    id="map_default_lat"
+                    type="number"
+                    step="0.000001"
+                    placeholder="-17.6396"
+                    onChange={(e) => handleConfigChange('map_default_lat', e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Latitud para centrar el mapa al abrir (Ej: Ilo, Perú = -17.6396)
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="map_default_lng">Longitud Por Defecto</Label>
+                  <Input
+                    id="map_default_lng"
+                    type="number"
+                    step="0.000001"
+                    placeholder="-71.3378"
+                    onChange={(e) => handleConfigChange('map_default_lng', e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Longitud para centrar el mapa al abrir (Ej: Ilo, Perú = -71.3378)
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="map_default_zoom">Zoom Por Defecto</Label>
+                  <Input
+                    id="map_default_zoom"
+                    type="number"
+                    min="1"
+                    max="20"
+                    placeholder="13"
+                    onChange={(e) => handleConfigChange('map_default_zoom', e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Nivel de zoom al abrir el mapa (1-20, recomendado: 13)
+                  </p>
+                </div>
+
+                <div className="p-4 bg-muted rounded-lg">
+                  <p className="text-sm font-medium mb-2">💡 Ubicaciones Comunes</p>
+                  <ul className="text-xs text-muted-foreground space-y-1">
+                    <li>• Ilo, Perú: -17.6396, -71.3378</li>
+                    <li>• Guayaquil, Ecuador: -2.17, -79.92</li>
+                    <li>• Lima, Perú: -12.0464, -77.0428</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Preferencias de Ubicación
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Usar Ubicación del Navegador</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Intentar detectar tu ubicación automáticamente
+                    </p>
+                  </div>
+                  <Switch 
+                    checked={config.use_geolocation !== false}
+                    onCheckedChange={(checked) => handleConfigChange('use_geolocation', checked)}
+                  />
+                </div>
+
+                <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                  <p className="text-sm">
+                    <strong>Nota:</strong> Si activas la ubicación del navegador, el mapa intentará usar tu ubicación actual. Si falla o denigas el permiso, usará la ubicación por defecto configurada arriba.
                   </p>
                 </div>
               </CardContent>

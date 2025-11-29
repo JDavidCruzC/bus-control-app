@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { supabase } from '@/integrations/supabase/client';
+import { useConfiguraciones } from '@/hooks/useConfiguraciones';
 
 interface ParaderoMapPickerProps {
   latitude: number;
@@ -16,6 +17,7 @@ export function ParaderoMapPicker({ latitude, longitude, onLocationChange }: Par
   const [mapToken, setMapToken] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const { getConfigValue } = useConfiguraciones();
 
   // Get user's current location
   useEffect(() => {
@@ -51,15 +53,20 @@ export function ParaderoMapPicker({ latitude, longitude, onLocationChange }: Par
 
     mapboxgl.accessToken = mapToken;
 
-    // Use provided coordinates, user location, or default to Guayaquil
-    const initialLng = longitude || userLocation?.[0] || -79.92;
-    const initialLat = latitude || userLocation?.[1] || -2.17;
+    // Get default location from config or use Ilo, Peru as default
+    const defaultLat = parseFloat(getConfigValue?.('map_default_lat') || '-17.6396');
+    const defaultLng = parseFloat(getConfigValue?.('map_default_lng') || '-71.3378');
+    const defaultZoom = parseInt(getConfigValue?.('map_default_zoom') || '13');
+
+    // Priority: provided coordinates > user location > config default > Ilo, Peru
+    const initialLng = longitude || userLocation?.[0] || defaultLng;
+    const initialLat = latitude || userLocation?.[1] || defaultLat;
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v12',
       center: [initialLng, initialLat],
-      zoom: 13,
+      zoom: defaultZoom,
     });
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -85,7 +92,7 @@ export function ParaderoMapPicker({ latitude, longitude, onLocationChange }: Par
     return () => {
       map.current?.remove();
     };
-  }, [mapToken, userLocation]);
+  }, [mapToken, userLocation, getConfigValue]);
 
   // Update marker position when props change
   useEffect(() => {

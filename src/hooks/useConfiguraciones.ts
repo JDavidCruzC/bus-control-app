@@ -66,6 +66,37 @@ export function useConfiguraciones() {
     }
   };
 
+  const createConfiguracion = async (config: Omit<Configuracion, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('configuraciones')
+        .insert([config])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setConfiguraciones(prev => [...prev, data]);
+      toast({
+        title: "Éxito",
+        description: "Configuración creada correctamente"
+      });
+      return data;
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "No se pudo crear la configuración",
+        variant: "destructive"
+      });
+      throw error;
+    }
+  };
+
+  const getConfigValue = (clave: string): string | undefined => {
+    const config = configuraciones.find(c => c.clave === clave);
+    return config?.valor;
+  };
+
   useEffect(() => {
     fetchConfiguraciones();
   }, []);
@@ -74,6 +105,8 @@ export function useConfiguraciones() {
     configuraciones,
     loading,
     updateConfiguracion,
+    createConfiguracion,
+    getConfigValue,
     refetch: fetchConfiguraciones
   };
 }
