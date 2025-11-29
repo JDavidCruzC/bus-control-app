@@ -1394,6 +1394,10 @@ export type Database = {
         }[]
       }
       can_view_employee_pii: { Args: never; Returns: boolean }
+      confirmar_email_usuario: {
+        Args: { usuario_id_input: string }
+        Returns: Json
+      }
       disablelongtransactions: { Args: never; Returns: string }
       dropgeometrycolumn:
         | {
