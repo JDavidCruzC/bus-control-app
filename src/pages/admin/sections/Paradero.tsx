@@ -13,12 +13,12 @@ import { LineaBusSelector } from "@/components/admin/LineaBusSelector";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export function Paradero() {
-  const { paraderos, loading, deleteParadero } = useParaderos();
+  const [selectedLineaId, setSelectedLineaId] = useState<string>("");
+  const { paraderos, loading, deleteParadero } = useParaderos(selectedLineaId);
   const [selectedParadero, setSelectedParadero] = useState<Paradero | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<'all' | 'activo' | 'inactivo'>('all');
-  const [selectedLineaId, setSelectedLineaId] = useState<string>("");
 
   const filteredParaderos = paraderos.filter(paradero => {
     const matchesSearch = paradero.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||

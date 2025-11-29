@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -7,10 +7,12 @@ import { useParaderos } from "@/hooks/useParaderos";
 import { useLineasBuses } from "@/hooks/useLineasBuses";
 import { useRutasConGeometria } from "@/hooks/useRutasConGeometria";
 import { RutaMapDrawer } from "./RutaMapDrawer";
+import { RutaMapViewer } from "./RutaMapViewer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Route, CheckCircle2 } from "lucide-react";
+import { MapPin, Route, CheckCircle2, Eye } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface GestionRutasDialogProps {
   open: boolean;
@@ -21,11 +23,12 @@ export function GestionRutasDialog({ open, onOpenChange }: GestionRutasDialogPro
   const { toast } = useToast();
   const { paraderos } = useParaderos();
   const { lineasBuses } = useLineasBuses();
-  const { createRutaGeom, updateRutaGeom } = useRutasConGeometria();
+  const { createRutaGeom, updateRutaGeom, rutasGeom } = useRutasConGeometria();
   const [selectedRutaId, setSelectedRutaId] = useState<string>('');
   const [routeCoordinates, setRouteCoordinates] = useState<[number, number][]>([]);
   const [selectedParaderos, setSelectedParaderos] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'edit' | 'view'>('edit');
 
   const handleRouteChange = (coordinates: [number, number][]) => {
     setRouteCoordinates(coordinates);
@@ -100,6 +103,7 @@ export function GestionRutasDialog({ open, onOpenChange }: GestionRutasDialogPro
   };
 
   const selectedLinea = lineasBuses.find(l => l.id === selectedRutaId);
+  const hasExistingRoute = rutasGeom.some(rg => rg.ruta_id === selectedRutaId);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -110,7 +114,7 @@ export function GestionRutasDialog({ open, onOpenChange }: GestionRutasDialogPro
             Gestionar Trayecto de Línea
           </DialogTitle>
           <DialogDescription>
-            Selecciona una línea de bus y traza su trayecto en el mapa. Los paraderos cercanos se detectarán automáticamente.
+            Selecciona una línea de bus y traza su trayecto en el mapa.
           </DialogDescription>
         </DialogHeader>
 
@@ -148,43 +152,61 @@ export function GestionRutasDialog({ open, onOpenChange }: GestionRutasDialogPro
             </Card>
           )}
 
-          {/* Mapa para trazar ruta */}
-          <div className="space-y-2">
-            <Label>Trazar Ruta en el Mapa</Label>
-            <div className="border rounded-lg overflow-hidden">
-              <RutaMapDrawer
-                onRouteChange={handleRouteChange}
-                initialRoute={routeCoordinates}
-              />
-            </div>
-            {routeCoordinates.length > 0 && (
-              <p className="text-sm text-muted-foreground">
-                {routeCoordinates.length} puntos trazados
-              </p>
-            )}
-          </div>
+          {selectedRutaId && (
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'edit' | 'view')}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="edit">Editar Ruta</TabsTrigger>
+                <TabsTrigger value="view" disabled={!hasExistingRoute}>
+                  <Eye className="h-4 w-4 mr-2" />
+                  Ver Ruta Guardada
+                </TabsTrigger>
+              </TabsList>
 
-          {/* Paraderos detectados */}
-          {selectedParaderos.length > 0 && (
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                Paraderos Detectados en la Ruta ({selectedParaderos.length})
-              </Label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto">
-                {paraderos
-                  .filter(p => selectedParaderos.includes(p.id))
-                  .map(paradero => (
-                    <div
-                      key={paradero.id}
-                      className="flex items-center gap-2 p-2 border rounded-lg bg-card"
-                    >
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">{paradero.nombre}</span>
+              <TabsContent value="edit" className="space-y-4 mt-4">
+                {/* Mapa para trazar ruta */}
+                <div className="space-y-2">
+                  <Label>Trazar Ruta en el Mapa</Label>
+                  <div className="border rounded-lg overflow-hidden">
+                    <RutaMapDrawer
+                      onRouteChange={handleRouteChange}
+                      initialRoute={routeCoordinates}
+                    />
+                  </div>
+                  {routeCoordinates.length > 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      {routeCoordinates.length} puntos trazados
+                    </p>
+                  )}
+                </div>
+
+                {/* Paraderos detectados */}
+                {selectedParaderos.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      Paraderos Detectados en la Ruta ({selectedParaderos.length})
+                    </Label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto">
+                      {paraderos
+                        .filter(p => selectedParaderos.includes(p.id))
+                        .map(paradero => (
+                          <div
+                            key={paradero.id}
+                            className="flex items-center gap-2 p-2 border rounded-lg bg-card"
+                          >
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                            <span className="text-sm">{paradero.nombre}</span>
+                          </div>
+                        ))}
                     </div>
-                  ))}
-              </div>
-            </div>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="view" className="space-y-4 mt-4">
+                <RutaMapViewer rutaId={selectedRutaId} />
+              </TabsContent>
+            </Tabs>
           )}
         </div>
 

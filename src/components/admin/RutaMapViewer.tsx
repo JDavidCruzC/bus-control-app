@@ -2,22 +2,20 @@ import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Trash2, Undo } from 'lucide-react';
 import { useConfiguraciones } from '@/hooks/useConfiguraciones';
+import { useRutasConGeometria } from '@/hooks/useRutasConGeometria';
 
-interface RutaMapDrawerProps {
-  onRouteChange?: (coordinates: [number, number][]) => void;
-  initialRoute?: [number, number][];
+interface RutaMapViewerProps {
+  rutaId: string;
 }
 
-export function RutaMapDrawer({ onRouteChange, initialRoute = [] }: RutaMapDrawerProps) {
+export function RutaMapViewer({ rutaId }: RutaMapViewerProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapToken, setMapToken] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const [coordinates, setCoordinates] = useState<[number, number][]>(initialRoute);
   const { getConfigValue } = useConfiguraciones();
+  const { rutasGeom } = useRutasConGeometria();
 
   useEffect(() => {
     const fetchToken = async () => {
@@ -39,7 +37,6 @@ export function RutaMapDrawer({ onRouteChange, initialRoute = [] }: RutaMapDrawe
 
     mapboxgl.accessToken = mapToken;
 
-    // Get default location from config or use Ilo, Peru as default
     const defaultLat = parseFloat(getConfigValue?.('map_default_lat') || '-17.6396');
     const defaultLng = parseFloat(getConfigValue?.('map_default_lng') || '-71.3378');
     const defaultZoom = parseInt(getConfigValue?.('map_default_zoom') || '13');
@@ -53,40 +50,57 @@ export function RutaMapDrawer({ onRouteChange, initialRoute = [] }: RutaMapDrawe
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
-    // Add click handler to add points
-    map.current.on('click', (e) => {
-      const { lng, lat } = e.lngLat;
-      const newCoords: [number, number] = [lng, lat];
-      
-      setCoordinates((prev) => {
-        const updated = [...prev, newCoords];
-        onRouteChange?.(updated);
-        return updated;
-      });
-
-      // Add marker
-      new mapboxgl.Marker({ color: '#3B82F6' })
-        .setLngLat([lng, lat])
-        .addTo(map.current!);
-    });
-
-    // Initialize with existing route if any
-    if (initialRoute.length > 0) {
-      setCoordinates(initialRoute);
-    }
-
     return () => {
       map.current?.remove();
     };
   }, [mapToken, getConfigValue]);
 
-  // Update route line on map
+  // Display route geometry
   useEffect(() => {
-    if (!map.current || coordinates.length < 2) return;
+    if (!map.current || !rutaId) return;
+
+    const rutaGeom = rutasGeom.find(rg => rg.ruta_id === rutaId);
+    if (!rutaGeom?.geom) return;
+
+    // Parse WKT geometry to coordinates
+    const wktString = rutaGeom.geom;
+    let coordinates: [number, number][] = [];
+
+    try {
+      // Handle both WKT string and binary formats
+      if (typeof wktString === 'string') {
+        const coordsMatch = wktString.match(/LINESTRING\(([^)]+)\)/);
+        if (coordsMatch) {
+          coordinates = coordsMatch[1].split(',').map(point => {
+            const [lng, lat] = point.trim().split(' ').map(Number);
+            return [lng, lat] as [number, number];
+          });
+        }
+      }
+
+      if (coordinates.length < 2) return;
+
+      // Wait for map to load
+      if (!map.current.isStyleLoaded()) {
+        map.current.on('load', () => {
+          addRouteToMap(coordinates);
+        });
+      } else {
+        addRouteToMap(coordinates);
+      }
+    } catch (error) {
+      console.error('Error parsing route geometry:', error);
+    }
+  }, [rutasGeom, rutaId]);
+
+  const addRouteToMap = (coordinates: [number, number][]) => {
+    if (!map.current) return;
 
     // Remove existing route layer if it exists
     if (map.current.getLayer('route')) {
       map.current.removeLayer('route');
+    }
+    if (map.current.getSource('route')) {
       map.current.removeSource('route');
     }
 
@@ -125,30 +139,17 @@ export function RutaMapDrawer({ onRouteChange, initialRoute = [] }: RutaMapDrawe
       );
       map.current.fitBounds(bounds, { padding: 50 });
     }
-  }, [coordinates]);
 
-  const handleUndo = () => {
-    setCoordinates((prev) => {
-      const updated = prev.slice(0, -1);
-      onRouteChange?.(updated);
-      return updated;
-    });
-  };
+    // Add markers for start and end points
+    new mapboxgl.Marker({ color: '#22C55E' })
+      .setLngLat(coordinates[0])
+      .setPopup(new mapboxgl.Popup().setText('Inicio'))
+      .addTo(map.current);
 
-  const handleClear = () => {
-    setCoordinates([]);
-    onRouteChange?.([]);
-    
-    // Clear all markers
-    if (map.current) {
-      const markers = document.querySelectorAll('.mapboxgl-marker');
-      markers.forEach((marker) => marker.remove());
-      
-      if (map.current.getLayer('route')) {
-        map.current.removeLayer('route');
-        map.current.removeSource('route');
-      }
-    }
+    new mapboxgl.Marker({ color: '#EF4444' })
+      .setLngLat(coordinates[coordinates.length - 1])
+      .setPopup(new mapboxgl.Popup().setText('Fin'))
+      .addTo(map.current);
   };
 
   if (loading) {
@@ -161,33 +162,9 @@ export function RutaMapDrawer({ onRouteChange, initialRoute = [] }: RutaMapDrawe
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Haz clic en el mapa para trazar la ruta ({coordinates.length} puntos)
-        </p>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleUndo}
-            disabled={coordinates.length === 0}
-          >
-            <Undo className="h-4 w-4 mr-1" />
-            Deshacer
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleClear}
-            disabled={coordinates.length === 0}
-          >
-            <Trash2 className="h-4 w-4 mr-1" />
-            Limpiar
-          </Button>
-        </div>
-      </div>
+      <p className="text-sm text-muted-foreground">
+        Visualización del trayecto de la ruta
+      </p>
       <div ref={mapContainer} className="w-full h-[400px] rounded-lg border" />
     </div>
   );

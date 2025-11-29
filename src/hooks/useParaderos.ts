@@ -29,21 +29,44 @@ export type Paradero = {
   updated_at: string;
 };
 
-export function useParaderos() {
+export function useParaderos(lineaId?: string) {
   const [paraderos, setParaderos] = useState<Paradero[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   const fetchParaderos = async () => {
     try {
+      // Get current user's empresa_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setParaderos([]);
+        setLoading(false);
+        return;
+      }
+
+      const { data: userData, error: userError } = await supabase
+        .from('usuarios')
+        .select('empresa_id')
+        .eq('id', user.id)
+        .single();
+
+      if (userError) throw userError;
+      if (!userData?.empresa_id) {
+        setParaderos([]);
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('paraderos')
         .select('*')
+        .eq('empresa_id', userData.empresa_id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       setParaderos(data || []);
     } catch (error: any) {
+      console.error('Error fetching paraderos:', error);
       toast({
         title: "Error",
         description: "No se pudieron cargar los paraderos",
@@ -152,7 +175,7 @@ export function useParaderos() {
 
   useEffect(() => {
     fetchParaderos();
-  }, []);
+  }, [lineaId]);
 
   return {
     paraderos,
