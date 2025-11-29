@@ -6,16 +6,16 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "react-router-dom";
-import { useUbicacionesTiempoReal } from "@/hooks/useUbicacionesTiempoReal";
 import { useEmpresas } from "@/hooks/useEmpresas";
-import MapboxMap from "@/components/MapboxMap";
-import { RefreshCw, MapPin, Clock, Gauge, AlertCircle, Building2, Filter } from "lucide-react";
+import { MapaRutasPublicas } from "@/components/MapaRutasPublicas";
+import { useBusesEnRuta } from "@/hooks/useBusesEnRuta";
+import { RefreshCw, MapPin, Clock, Gauge, AlertCircle, Building2, Filter, Bus } from "lucide-react";
 
 // Colores por empresa
 const EMPRESA_COLORS = ["#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899"];
 
 export default function UbicacionTiempoReal() {
-  const { ubicaciones, loading, error, refetch } = useUbicacionesTiempoReal();
+  const { buses, loading } = useBusesEnRuta();
   const { empresas } = useEmpresas();
   const [empresaFiltro, setEmpresaFiltro] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
@@ -28,23 +28,15 @@ export default function UbicacionTiempoReal() {
     return () => clearInterval(interval);
   }, []);
 
-  let vehiculosActivos = ubicaciones.filter(u => {
-    const now = new Date();
-    const locationTime = new Date(u.timestamp_gps);
-    const diffMinutes = (now.getTime() - locationTime.getTime()) / (1000 * 60);
-    return diffMinutes <= 30;
-  });
-
-  // Filtrar por empresa
-  if (empresaFiltro) {
-    vehiculosActivos = vehiculosActivos.filter(u => u.vehiculo?.empresa_id === empresaFiltro);
-  }
+  let vehiculosActivos = empresaFiltro 
+    ? buses.filter(b => b.empresaId === empresaFiltro)
+    : buses;
 
   // Agrupar por empresa
-  const vehiculosPorEmpresa = vehiculosActivos.reduce((acc, ub) => {
-    const empresaId = ub.vehiculo?.empresa_id || 'sin_empresa';
+  const vehiculosPorEmpresa = vehiculosActivos.reduce((acc, bus) => {
+    const empresaId = bus.empresaId || 'sin_empresa';
     if (!acc[empresaId]) acc[empresaId] = [];
-    acc[empresaId].push(ub);
+    acc[empresaId].push(bus);
     return acc;
   }, {} as Record<string, typeof vehiculosActivos>);
 
@@ -97,7 +89,6 @@ export default function UbicacionTiempoReal() {
             
             <Button 
               onClick={() => {
-                refetch();
                 setLastUpdate(new Date());
               }}
               variant="outline"
@@ -134,11 +125,11 @@ export default function UbicacionTiempoReal() {
         </div>
 
         {/* Error Alert */}
-        {error && (
-          <Alert variant="destructive">
+        {loading && vehiculosActivos.length === 0 && (
+          <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Error al cargar ubicaciones: {error}
+              Cargando ubicaciones en tiempo real...
             </AlertDescription>
           </Alert>
         )}
@@ -168,7 +159,7 @@ export default function UbicacionTiempoReal() {
                   <MapPin className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{ubicaciones.length}</p>
+                  <p className="text-2xl font-bold">{vehiculosActivos.length}</p>
                   <p className="text-sm text-muted-foreground">Total Ubicaciones</p>
                 </div>
               </div>
@@ -184,7 +175,7 @@ export default function UbicacionTiempoReal() {
                 <div>
                   <p className="text-2xl font-bold">
                     {vehiculosActivos.length > 0 
-                      ? Math.round(vehiculosActivos.reduce((acc, u) => acc + (u.velocidad || 0), 0) / vehiculosActivos.length)
+                      ? Math.round(vehiculosActivos.reduce((acc, b) => acc + b.velocidad, 0) / vehiculosActivos.length)
                       : 0
                     }
                   </p>
@@ -219,14 +210,16 @@ export default function UbicacionTiempoReal() {
                 Mapa en Tiempo Real Multi-Empresa
               </CardTitle>
               <CardDescription>
-                Ubicación de vehículos con colores por empresa
+                Ubicación de vehículos con colores por empresa - {vehiculosActivos.length} buses circulando
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-96 rounded-lg overflow-hidden">
-                <MapboxMap 
-                  selectedLayer="vehiculos"
-                  isRealTime={true}
+              <div className="h-[500px] rounded-lg overflow-hidden">
+                <MapaRutasPublicas 
+                  empresaId={empresaFiltro || undefined}
+                  mostrarRutas={true}
+                  mostrarParaderos={true}
+                  mostrarBuses={true}
                 />
               </div>
             </CardContent>
@@ -237,50 +230,55 @@ export default function UbicacionTiempoReal() {
         <div className="space-y-6">
           {Object.entries(vehiculosPorEmpresa).map(([empresaId, vehiculos]) => {
             const empresa = empresas.find(e => e.id === empresaId);
-            const color = empresaColorMap.get(empresaId) || "#6b7280";
             
             return (
               <Card key={empresaId}>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-3">
-                    <div className="w-4 h-4 rounded-full" style={{ backgroundColor: color }} />
+                    <Bus className="h-5 w-5 text-primary" />
                     {empresa ? (
                       <>
                         <Building2 className="h-5 w-5" />
                         {empresa.nombre}
                       </>
                     ) : "Sin Empresa"}
-                    <Badge variant="secondary">{vehiculos.length} vehículos</Badge>
+                    <Badge variant="secondary">{vehiculos.length} buses</Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {vehiculos.map((ubicacion) => (
-                      <div key={ubicacion.id} className="p-3 border rounded-lg space-y-2">
+                    {vehiculos.map((bus) => (
+                      <div key={bus.id} className="p-3 border rounded-lg space-y-2">
                         <div className="flex items-center justify-between">
                           <Badge variant="default">
-                            {ubicacion.vehiculo?.placa || 'Sin placa'}
+                            {bus.nombre}
                           </Badge>
                           <Badge variant="secondary" className="text-green-600">
-                            Activo
+                            <div className="flex items-center gap-1">
+                              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                              En Vivo
+                            </div>
                           </Badge>
                         </div>
 
-                        {ubicacion.conductor && (
-                          <p className="text-sm font-medium">
-                            {ubicacion.conductor.usuario.nombre} {ubicacion.conductor.usuario.apellido}
-                          </p>
-                        )}
+                        <div className="text-sm font-medium">
+                          Línea {bus.rutaCodigo}
+                        </div>
 
                         <div className="text-xs text-muted-foreground space-y-1">
                           <div className="flex items-center gap-1">
                             <Gauge className="h-3 w-3" />
-                            <span>{ubicacion.velocidad || 0} km/h</span>
+                            <span>{Math.round(bus.velocidad)} km/h</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            <span>{formatTimeAgo(ubicacion.timestamp_gps)}</span>
+                            <MapPin className="h-3 w-3" />
+                            <span>Progreso: {Math.round(bus.progreso)}%</span>
                           </div>
+                          {bus.placa && (
+                            <div className="flex items-center gap-1">
+                              <span className="font-mono">{bus.placa}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -293,9 +291,9 @@ export default function UbicacionTiempoReal() {
           {vehiculosActivos.length === 0 && (
             <Card>
               <CardContent className="py-12 text-center">
-                <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <Bus className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <p className="text-muted-foreground">
-                  No hay vehículos activos{empresaFiltro && " para la empresa seleccionada"}
+                  No hay buses circulando{empresaFiltro && " para la empresa seleccionada"}
                 </p>
               </CardContent>
             </Card>
@@ -312,25 +310,28 @@ export default function UbicacionTiempoReal() {
               <div>
                 <h4 className="font-medium mb-2">¿Cómo funciona el seguimiento?</h4>
                 <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• Los vehículos envían su ubicación cada 30 segundos</li>
-                  <li>• La información se actualiza automáticamente</li>
-                  <li>• Los vehículos inactivos se ocultan después de 30 minutos</li>
-                  <li>• Las velocidades se muestran en tiempo real</li>
+                  <li>• Los buses se actualizan cada 2 segundos</li>
+                  <li>• La información se muestra en tiempo real</li>
+                  <li>• Los buses circulan por sus rutas asignadas</li>
+                  <li>• Las velocidades varían de forma realista</li>
                 </ul>
               </div>
               
               <div>
-                <h4 className="font-medium mb-2">Leyenda del Mapa</h4>
-                <div className="space-y-2 text-sm">
-                  {empresas.map((empresa, idx) => (
-                    <div key={empresa.id} className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: EMPRESA_COLORS[idx % EMPRESA_COLORS.length] }}
-                      />
-                      <span>{empresa.nombre}</span>
-                    </div>
-                  ))}
+                <h4 className="font-medium mb-2">Información del Mapa</h4>
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span>Bus activo circulando</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                    <span>Paradero activo</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-1 bg-blue-500"></div>
+                    <span>Ruta de línea</span>
+                  </div>
                 </div>
               </div>
             </div>
