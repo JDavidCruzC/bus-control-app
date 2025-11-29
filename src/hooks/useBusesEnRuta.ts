@@ -24,6 +24,7 @@ export type BusEnRuta = {
 export function useBusesEnRuta(empresaId?: string) {
   const [buses, setBuses] = useState<BusEnRuta[]>([]);
   const [loading, setLoading] = useState(true);
+  const [rutasGeomCache, setRutasGeomCache] = useState<any[]>([]);
   const { toast } = useToast();
 
   // Inicializar buses simulados
@@ -51,6 +52,9 @@ export function useBusesEnRuta(empresaId?: string) {
       const { data: rutasGeom, error } = await query;
       if (error) throw error;
 
+      // Guardar geometrías en cache
+      setRutasGeomCache(rutasGeom || []);
+
       const nuevosBuses: BusEnRuta[] = [];
 
       for (const rutaGeom of rutasGeom || []) {
@@ -67,11 +71,11 @@ export function useBusesEnRuta(empresaId?: string) {
 
         if (coordinates.length < 2) continue;
 
-        // Crear 2-3 buses por ruta para simular tráfico realista
-        const numBuses = Math.floor(Math.random() * 2) + 2; // 2 o 3 buses
+        // Crear 3-4 buses por ruta para simular tráfico realista
+        const numBuses = Math.floor(Math.random() * 2) + 3; // 3 o 4 buses
         
         for (let i = 0; i < numBuses; i++) {
-          const progresoInicial = (i * 33) % 100; // Distribuir buses a lo largo de la ruta
+          const progresoInicial = (i * 25) % 100; // Distribuir buses a lo largo de la ruta
           const posicionEnRuta = Math.floor((coordinates.length - 1) * (progresoInicial / 100));
           const coord = coordinates[posicionEnRuta];
 
@@ -81,7 +85,7 @@ export function useBusesEnRuta(empresaId?: string) {
             placa: `${rutaGeom.ruta.codigo}${String(i + 1).padStart(2, '0')}`,
             latitud: coord[1],
             longitud: coord[0],
-            velocidad: 20 + Math.random() * 30, // 20-50 km/h
+            velocidad: 25 + Math.random() * 25, // 25-50 km/h
             progreso: progresoInicial,
             rutaId: rutaGeom.ruta_id,
             rutaCodigo: rutaGeom.ruta.codigo,
@@ -101,21 +105,14 @@ export function useBusesEnRuta(empresaId?: string) {
     }
   };
 
-  // Simular movimiento de buses
+  // Simular movimiento de buses (optimizado sin queries)
   useEffect(() => {
-    const interval = setInterval(async () => {
-      // Obtener rutas con geometría
-      const { data: rutasGeom } = await supabase
-        .from('rutas_geometria')
-        .select(`
-          id,
-          ruta_id,
-          geom
-        `);
+    if (rutasGeomCache.length === 0) return;
 
+    const interval = setInterval(() => {
       setBuses(prevBuses => 
         prevBuses.map(bus => {
-          const rutaGeom = rutasGeom?.find(rg => rg.ruta_id === bus.rutaId);
+          const rutaGeom = rutasGeomCache.find(rg => rg.ruta_id === bus.rutaId);
           if (!rutaGeom || !rutaGeom.geom) return bus;
 
           let coordinates: [number, number][] = [];
@@ -125,16 +122,16 @@ export function useBusesEnRuta(empresaId?: string) {
 
           if (coordinates.length < 2) return bus;
 
-          // Incrementar progreso (velocidad variable)
-          const incremento = (bus.velocidad / 60) * 0.5; // Ajustado para movimiento más lento
+          // Incrementar progreso suavemente
+          const incremento = (bus.velocidad / 60) * 0.8; // Movimiento más visible
           let nuevoProgreso = (bus.progreso + incremento) % 100;
 
           // Calcular nueva posición en la ruta
           const posicionEnRuta = Math.floor((coordinates.length - 1) * (nuevoProgreso / 100));
           const coord = coordinates[Math.min(posicionEnRuta, coordinates.length - 1)];
 
-          // Variar velocidad ligeramente
-          const nuevaVelocidad = Math.max(10, Math.min(50, bus.velocidad + (Math.random() - 0.5) * 5));
+          // Variar velocidad ligeramente para realismo
+          const nuevaVelocidad = Math.max(20, Math.min(55, bus.velocidad + (Math.random() - 0.5) * 3));
 
           return {
             ...bus,
@@ -145,10 +142,10 @@ export function useBusesEnRuta(empresaId?: string) {
           };
         })
       );
-    }, 2000); // Actualizar cada 2 segundos
+    }, 1500); // Actualizar cada 1.5 segundos para movimiento más fluido
 
     return () => clearInterval(interval);
-  }, []);
+  }, [rutasGeomCache]);
 
   useEffect(() => {
     inicializarBusesSimulados();
