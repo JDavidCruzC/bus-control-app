@@ -110,15 +110,27 @@ export function useUsuarios() {
       console.log('Usuarios obtenidos de la base de datos:', data?.length, 'usuarios');
 
       // Obtener información de confirmación de email desde auth.users usando RPC
-      // Creamos un mapa simple para verificar si los emails están confirmados
       const emailConfirmationMap = new Map<string, boolean>();
       
-      // Intentar obtener información de auth para cada usuario
+      // Obtener estado de confirmación para cada usuario
       for (const usuario of data || []) {
         if (usuario.email) {
-          // Por defecto, asumimos que está confirmado si no podemos verificar
-          // En producción, esto debería verificarse con una función RPC de Supabase
-          emailConfirmationMap.set(usuario.id, true);
+          try {
+            const { data: confirmData, error: confirmError } = await supabase
+              .rpc('get_user_email_confirmation', { user_id_input: usuario.id });
+            
+            if (!confirmError && confirmData && confirmData.length > 0) {
+              emailConfirmationMap.set(usuario.id, confirmData[0].email_confirmed);
+            } else {
+              // Si hay error o no hay datos, asumimos no confirmado
+              emailConfirmationMap.set(usuario.id, false);
+            }
+          } catch (error) {
+            console.error(`Error al obtener confirmación de email para usuario ${usuario.id}:`, error);
+            emailConfirmationMap.set(usuario.id, false);
+          }
+        } else {
+          emailConfirmationMap.set(usuario.id, false);
         }
       }
 
