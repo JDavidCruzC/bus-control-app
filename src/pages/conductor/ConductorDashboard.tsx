@@ -7,7 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { ChangePasswordDialog } from "@/components/admin/ChangePasswordDialog";
-import { MapPin, Navigation, Clock, Users, AlertTriangle, CheckCircle, Play, Square, Lock, Settings as SettingsIcon } from "lucide-react";
+import { MapPin, Navigation, Clock, Users, AlertTriangle, CheckCircle, Play, Square, Lock, LogOut } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type Viaje = {
   id: string;
@@ -29,6 +30,7 @@ type Conductor = {
   placa: string;
   licencia_numero: string;
   activo: boolean;
+  ruta_id: string | null;
   created_at: string;
   updated_at: string;
   usuario?: {
@@ -39,10 +41,23 @@ type Conductor = {
   };
 };
 
+type Paradero = {
+  id: string;
+  nombre: string;
+  descripcion: string | null;
+  direccion: string | null;
+  latitud: number;
+  longitud: number;
+  orden_secuencia: number;
+  tiempo_llegada_estimado: string | null;
+};
+
 export default function ConductorDashboard() {
-  const { userData } = useAuth();
+  const { userData, signOut } = useAuth();
   const [conductor, setConductor] = useState<Conductor | null>(null);
   const [viajeActual, setViajeActual] = useState<Viaje | null>(null);
+  const [paraderos, setParaderos] = useState<Paradero[]>([]);
+  const [proximoParadero, setProximoParadero] = useState<Paradero | null>(null);
   const [ubicacionActiva, setUbicacionActiva] = useState(false);
   const [loading, setLoading] = useState(true);
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
@@ -53,6 +68,15 @@ export default function ConductorDashboard() {
     fetchViajeActual();
   }, []);
 
+  useEffect(() => {
+    if (conductor?.ruta_id || viajeActual?.ruta_id) {
+      const rutaId = viajeActual?.ruta_id || conductor?.ruta_id;
+      if (rutaId) {
+        fetchParaderos(rutaId);
+      }
+    }
+  }, [conductor, viajeActual]);
+
   const fetchConductorData = async () => {
     try {
       const { data: user } = await supabase.auth.getUser();
@@ -60,7 +84,10 @@ export default function ConductorDashboard() {
 
       const { data, error } = await supabase
         .from('conductores')
-        .select('*')
+        .select(`
+          *,
+          usuario:usuarios(nombre, apellido, telefono, email)
+        `)
         .eq('usuario_id', user.user.id)
         .single();
 
@@ -72,6 +99,45 @@ export default function ConductorDashboard() {
         description: "No se pudo cargar la información del conductor",
         variant: "destructive"
       });
+    }
+  };
+
+  const fetchParaderos = async (rutaId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('rutas_paraderos')
+        .select(`
+          id,
+          orden_secuencia,
+          tiempo_llegada_estimado,
+          paradero:paraderos(
+            id,
+            nombre,
+            descripcion,
+            direccion,
+            latitud,
+            longitud
+          )
+        `)
+        .eq('ruta_id', rutaId)
+        .order('orden_secuencia', { ascending: true });
+
+      if (error) throw error;
+
+      const paraderosFormateados = data.map((item: any) => ({
+        ...item.paradero,
+        orden_secuencia: item.orden_secuencia,
+        tiempo_llegada_estimado: item.tiempo_llegada_estimado
+      }));
+
+      setParaderos(paraderosFormateados);
+      
+      // Establecer el primer paradero como próximo si no hay viaje activo
+      if (paraderosFormateados.length > 0) {
+        setProximoParadero(paraderosFormateados[0]);
+      }
+    } catch (error: any) {
+      console.error('Error al cargar paraderos:', error);
     }
   };
 
@@ -282,6 +348,14 @@ export default function ConductorDashboard() {
               <Lock className="h-4 w-4 mr-2" />
               Cambiar Contraseña
             </Button>
+            <Button 
+              variant="destructive" 
+              size="sm"
+              onClick={signOut}
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Cerrar Sesión
+            </Button>
             <Badge variant={conductor?.activo ? 'default' : 'secondary'}>
               {conductor?.activo ? 'Activo' : 'Inactivo'}
             </Badge>
@@ -395,6 +469,117 @@ export default function ConductorDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Lista de paraderos de la ruta */}
+        {paraderos.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5" />
+                Paraderos de la Ruta
+              </CardTitle>
+              <CardDescription>
+                Recorrido completo con tiempos estimados
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {proximoParadero && (
+                <div className="mb-6 p-4 bg-primary/10 rounded-lg border-2 border-primary">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-medium text-primary">PRÓXIMO PARADERO</p>
+                    <Badge variant="default">
+                      #{proximoParadero.orden_secuencia}
+                    </Badge>
+                  </div>
+                  <h3 className="text-xl font-bold mb-1">{proximoParadero.nombre}</h3>
+                  {proximoParadero.direccion && (
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {proximoParadero.direccion}
+                    </p>
+                  )}
+                  {proximoParadero.tiempo_llegada_estimado && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Clock className="h-4 w-4" />
+                      <span>Llegada estimada: {proximoParadero.tiempo_llegada_estimado}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <Separator className="my-4" />
+
+              <ScrollArea className="h-[400px] pr-4">
+                <div className="space-y-3">
+                  {paraderos.map((paradero, index) => (
+                    <div 
+                      key={paradero.id}
+                      className={`p-4 rounded-lg border transition-all ${
+                        proximoParadero?.id === paradero.id 
+                          ? 'bg-primary/5 border-primary' 
+                          : 'bg-card border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          <div className={`flex h-8 w-8 items-center justify-center rounded-full ${
+                            proximoParadero?.id === paradero.id
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted text-muted-foreground'
+                          }`}>
+                            <span className="text-sm font-bold">{paradero.orden_secuencia}</span>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold">{paradero.nombre}</h4>
+                            {paradero.direccion && (
+                              <p className="text-sm text-muted-foreground">
+                                {paradero.direccion}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        {proximoParadero?.id === paradero.id && (
+                          <Badge variant="default" className="ml-2">
+                            Próximo
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      {paradero.descripcion && (
+                        <p className="text-sm text-muted-foreground mb-2 ml-11">
+                          {paradero.descripcion}
+                        </p>
+                      )}
+
+                      <div className="flex items-center gap-4 ml-11 text-sm text-muted-foreground">
+                        {paradero.tiempo_llegada_estimado && (
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            <span>{paradero.tiempo_llegada_estimado}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          <span>{paradero.latitud.toFixed(4)}, {paradero.longitud.toFixed(4)}</span>
+                        </div>
+                      </div>
+
+                      {index < paraderos.length - 1 && (
+                        <div className="ml-4 mt-2 h-6 border-l-2 border-dashed border-muted-foreground/30" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+
+              {paraderos.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <MapPin className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>No hay paraderos configurados para esta ruta</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Acciones rápidas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
