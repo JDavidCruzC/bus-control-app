@@ -3,139 +3,129 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Bus, Play, Pause, MapPin, Gauge } from "lucide-react";
-import { useBusesSimulados } from "@/hooks/useBusesSimulados";
 import { useLineasBuses } from "@/hooks/useLineasBuses";
+import { useBusesEnRuta } from "@/hooks/useBusesEnRuta";
 import { Progress } from "@/components/ui/progress";
+import { MapaRutasPublicas } from "@/components/MapaRutasPublicas";
 
 interface SimulacionBusesCardProps {
   rutaId?: string;
 }
 
 export function SimulacionBusesCard({ rutaId }: SimulacionBusesCardProps) {
-  const { buses, loading, updateBusSimulado } = useBusesSimulados(rutaId);
   const { lineasBuses } = useLineasBuses();
-  const [simulationActive, setSimulationActive] = useState(false);
+  const { buses, loading } = useBusesEnRuta();
+  const [mostrarMapa, setMostrarMapa] = useState(true);
 
-  // Simulación de movimiento de buses
-  useEffect(() => {
-    if (!simulationActive) return;
-
-    const interval = setInterval(() => {
-      buses.forEach(async (bus) => {
-        if (!bus.activo) return;
-
-        // Incrementar progreso (simulación simple)
-        const newProgreso = (bus.progreso_ruta + 1) % 101;
-        const newVelocidad = Math.random() * 40 + 20; // 20-60 km/h
-
-        await updateBusSimulado(bus.id, {
-          progreso_ruta: newProgreso,
-          velocidad_actual: Math.round(newVelocidad),
-          tiempo_estimado_llegada: Math.round((100 - newProgreso) / 5)
-        });
-      });
-    }, 3000); // Actualizar cada 3 segundos
-
-    return () => clearInterval(interval);
-  }, [simulationActive, buses]);
-
-  const toggleSimulation = () => {
-    setSimulationActive(!simulationActive);
-  };
-
-  const activeBuses = buses.filter(b => b.activo);
+  const busesFiltered = rutaId ? buses.filter(b => b.rutaId === rutaId) : buses;
+  const activeBuses = busesFiltered.filter(b => b.activo);
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Bus className="h-5 w-5 text-primary" />
-              Simulación de Buses en Circulación
-            </CardTitle>
-            <CardDescription>
-              {activeBuses.length} buses activos circulando
-            </CardDescription>
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Bus className="h-5 w-5 text-primary" />
+                Simulación de Buses en Circulación
+              </CardTitle>
+              <CardDescription>
+                {activeBuses.length} buses activos circulando
+              </CardDescription>
+            </div>
+            <Button
+              variant={mostrarMapa ? "default" : "outline"}
+              size="sm"
+              onClick={() => setMostrarMapa(!mostrarMapa)}
+            >
+              {mostrarMapa ? "Ocultar Mapa" : "Mostrar Mapa"}
+            </Button>
           </div>
-          <Button
-            variant={simulationActive ? "destructive" : "default"}
-            size="sm"
-            onClick={toggleSimulation}
-          >
-            {simulationActive ? (
-              <>
-                <Pause className="h-4 w-4 mr-2" />
-                Pausar
-              </>
-            ) : (
-              <>
-                <Play className="h-4 w-4 mr-2" />
-                Iniciar
-              </>
-            )}
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="text-center py-8 text-muted-foreground">
-            Cargando buses...
-          </div>
-        ) : activeBuses.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            No hay buses en circulación
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {activeBuses.map((bus) => {
-              const linea = lineasBuses.find(l => l.id === bus.ruta_id);
-              
-              return (
-                <div key={bus.id} className="p-4 border rounded-lg space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Bus className="h-5 w-5 text-primary" />
-                      <div>
-                        <p className="font-semibold">{bus.nombre_simulado}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {linea ? `Línea ${linea.codigo} - ${linea.nombre}` : 'Sin línea asignada'}
-                        </p>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Cargando buses...
+            </div>
+          ) : activeBuses.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No hay buses en circulación para esta ruta
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {activeBuses.map((bus) => {
+                const linea = lineasBuses.find(l => l.id === bus.rutaId);
+                
+                return (
+                  <div key={bus.id} className="p-4 border rounded-lg space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Bus className="h-5 w-5 text-primary" />
+                        <div>
+                          <p className="font-semibold">{bus.nombre}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {linea ? `Línea ${linea.codigo} - ${linea.nombre}` : `Línea ${bus.rutaCodigo}`}
+                          </p>
+                        </div>
                       </div>
+                      <Badge variant="default" className="flex items-center gap-1">
+                        <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                        En Movimiento
+                      </Badge>
                     </div>
-                    <Badge variant={simulationActive ? "default" : "secondary"}>
-                      {simulationActive ? 'En Movimiento' : 'Detenido'}
-                    </Badge>
-                  </div>
 
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Progreso de ruta</span>
-                      <span className="font-medium">{Math.round(bus.progreso_ruta)}%</span>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Progreso de ruta</span>
+                        <span className="font-medium">{Math.round(bus.progreso)}%</span>
+                      </div>
+                      <Progress value={bus.progreso} className="h-2" />
                     </div>
-                    <Progress value={bus.progreso_ruta} className="h-2" />
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <Gauge className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">Velocidad:</span>
-                      <span className="font-medium">{bus.velocidad_actual} km/h</span>
-                    </div>
-                    {bus.proximo_paradero && (
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Gauge className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">Velocidad:</span>
+                        <span className="font-medium">{Math.round(bus.velocidad)} km/h</span>
+                      </div>
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">ETA:</span>
-                        <span className="font-medium">{bus.tiempo_estimado_llegada} min</span>
+                        <span className="text-muted-foreground">Posición:</span>
+                        <span className="font-mono text-xs">{bus.latitud.toFixed(4)}, {bus.longitud.toFixed(4)}</span>
                       </div>
-                    )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Mapa de simulación */}
+      {mostrarMapa && activeBuses.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MapPin className="h-5 w-5" />
+              Visualización en Mapa
+            </CardTitle>
+            <CardDescription>
+              Buses circulando en tiempo real por sus rutas asignadas
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[500px] rounded-lg overflow-hidden">
+              <MapaRutasPublicas 
+                mostrarRutas={true}
+                mostrarParaderos={true}
+                mostrarBuses={true}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }

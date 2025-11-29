@@ -9,13 +9,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Link } from "react-router-dom";
 import { useRutasPublicas } from "@/hooks/useRutasPublicas";
 import { useEmpresas } from "@/hooks/useEmpresas";
-import { Search, MapPin, Clock, DollarSign, Route, Building2 } from "lucide-react";
+import { MapaRutasPublicas } from "@/components/MapaRutasPublicas";
+import { publicarRutasAutomaticamente } from "@/utils/publicarRutasAutomaticamente";
+import { Search, MapPin, Clock, DollarSign, Route, Building2, Bus } from "lucide-react";
+import { useEffect } from "react";
 
 export default function ConsultarRutas() {
   const [empresaSeleccionada, setEmpresaSeleccionada] = useState<string | null>(null);
   const { empresas } = useEmpresas();
-  const { rutas, loading, error } = useRutasPublicas(empresaSeleccionada);
+  const { rutas, loading, error, refetch } = useRutasPublicas(empresaSeleccionada);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Publicar rutas automáticamente al cargar
+  useEffect(() => {
+    publicarRutasAutomaticamente().then(() => refetch());
+  }, []);
 
   const rutasFiltradas = rutas.filter(ruta => 
     ruta.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -156,6 +164,31 @@ export default function ConsultarRutas() {
             {searchTerm ? `Resultados para "${searchTerm}"` : 'Todas las Rutas'}
             <span className="text-muted-foreground ml-2">({rutasFiltradas.length})</span>
           </h2>
+
+          {/* Mapa con rutas y buses */}
+          {rutasFiltradas.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bus className="h-5 w-5" />
+                  Mapa de Rutas en Tiempo Real
+                </CardTitle>
+                <CardDescription>
+                  Visualiza las rutas, paraderos y buses circulando en tiempo real
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[500px] rounded-lg overflow-hidden">
+                  <MapaRutasPublicas 
+                    empresaId={empresaSeleccionada || undefined}
+                    mostrarRutas={true}
+                    mostrarParaderos={true}
+                    mostrarBuses={true}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {rutasFiltradas.length === 0 ? (
             <Card>
