@@ -2,9 +2,31 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Bus, MapPin, Clock, Building2, ShieldCheck } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user, userRole, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && user && userRole) {
+      // Redirigir automáticamente según el rol si ya está autenticado
+      if (userRole === 'gerente') {
+        navigate('/empresa/dashboard');
+      } else if (userRole === 'administrador') {
+        navigate('/admin');
+      } else if (userRole === 'conductor' || userRole === 'cobrador') {
+        navigate('/conductor');
+      } else if (userRole === 'super_admin') {
+        navigate('/superadmin');
+      }
+    }
+  }, [user, userRole, loading, navigate]);
+
+  if (loading) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
