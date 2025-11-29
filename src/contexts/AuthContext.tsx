@@ -197,11 +197,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInSuperAdmin = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-    return { error };
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        return { error: { message: error.message || "Error al iniciar sesión" } };
+      }
+
+      if (!data.user) {
+        return { error: { message: "Usuario no encontrado" } };
+      }
+
+      // Verificar que el usuario sea super_admin
+      const { data: userData, error: userError } = await supabase
+        .from('usuarios')
+        .select('rol:roles(nombre)')
+        .eq('id', data.user.id)
+        .maybeSingle();
+
+      if (userError) {
+        console.error('Error al verificar rol:', userError);
+        await supabase.auth.signOut();
+        return { error: { message: "Error al verificar permisos" } };
+      }
+
+      // Si no existe el usuario en la tabla usuarios, verificar si es el super admin inicial
+      if (!userData) {
+        // Verificar si es el email del super admin
+        if (email === 'superadmin@sistema.com') {
+          // Usuario super admin sin registro en tabla usuarios (primer login)
+          return { error: null };
+        }
+        await supabase.auth.signOut();
+        return { error: { message: "Usuario no autorizado como Super Admin" } };
+      }
+
+      if (userData.rol?.nombre !== 'super_admin') {
+        await supabase.auth.signOut();
+        return { error: { message: "No tienes permisos de Super Admin" } };
+      }
+
+      return { error: null };
+    } catch (error: any) {
+      console.error('Error al iniciar sesión como super admin:', error);
+      return { error: { message: error.message || "Error al iniciar sesión" } };
+    }
   };
 
   const signUpClient = async (email: string, password: string, clientData: any) => {
