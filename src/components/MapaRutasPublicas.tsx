@@ -42,10 +42,9 @@ export function MapaRutasPublicas({
     fetchToken();
   }, []);
 
-  // Initialize map
+  // Initialize map (solo una vez)
   useEffect(() => {
-    if (!mapContainer.current || !mapToken) return;
-    if (map.current) return;
+    if (!mapContainer.current || !mapToken || map.current) return;
 
     mapboxgl.accessToken = mapToken;
 
@@ -55,7 +54,7 @@ export function MapaRutasPublicas({
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
+      style: 'mapbox://styles/mapbox/light-v11',
       center: [defaultLng, defaultLat],
       zoom: defaultZoom,
       attributionControl: false,
@@ -70,12 +69,14 @@ export function MapaRutasPublicas({
     });
 
     return () => {
-      markersRef.current.forEach(m => m.remove());
-      markersRef.current = [];
-      map.current?.remove();
-      map.current = null;
+      if (map.current) {
+        markersRef.current.forEach(m => m.remove());
+        markersRef.current = [];
+        map.current.remove();
+        map.current = null;
+      }
     };
-  }, [mapToken, getConfigValue]);
+  }, [mapToken]);
 
   // Cargar rutas y paraderos
   const cargarRutasYParaderos = async () => {
@@ -230,119 +231,96 @@ export function MapaRutasPublicas({
     }
   };
 
-  // Actualizar marcadores de buses (optimizado - sin recrear)
+  // Actualizar marcadores de buses
   useEffect(() => {
-    if (!map.current || !mostrarBuses || !map.current.isStyleLoaded()) return;
+    if (!map.current || !mostrarBuses) return;
 
-    // Crear un mapa de buses actuales por ID
-    const busMap = new Map(buses.map(b => [b.id, b]));
-    
-    // Actualizar o remover marcadores existentes
-    markersRef.current = markersRef.current.filter(marker => {
-      const el = marker.getElement();
-      if (!el.classList.contains('bus-marker')) return true; // Mantener paraderos
+    const updateBuses = () => {
+      if (!map.current) return;
+
+      // Crear un mapa de buses actuales por ID
+      const busMap = new Map(buses.map(b => [b.id, b]));
       
-      const busId = el.getAttribute('data-bus-id');
-      const bus = busId ? busMap.get(busId) : null;
-      
-      if (bus) {
-        // Actualizar posición del marcador existente
-        marker.setLngLat([bus.longitud, bus.latitud]);
+      // Actualizar o remover marcadores existentes
+      markersRef.current = markersRef.current.filter(marker => {
+        const el = marker.getElement();
+        if (!el.classList.contains('bus-marker')) return true; // Mantener paraderos
         
-        // Actualizar popup
-        const popup = marker.getPopup();
-        if (popup) {
-          popup.setHTML(`
-            <div class="p-3 min-w-[200px]">
-              <h3 class="font-bold text-lg mb-2">${bus.nombre}</h3>
-              <div class="space-y-2 text-sm">
-                <div class="flex justify-between">
-                  <span class="text-gray-600">Línea:</span>
-                  <span class="font-semibold">${bus.rutaCodigo}</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-gray-600">Velocidad:</span>
-                  <span class="font-semibold">${Math.round(bus.velocidad)} km/h</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-gray-600">Progreso:</span>
-                  <span class="font-semibold">${Math.round(bus.progreso)}%</span>
-                </div>
-                ${bus.placa ? `
-                  <div class="flex justify-between">
-                    <span class="text-gray-600">Placa:</span>
-                    <span class="font-mono font-semibold">${bus.placa}</span>
-                  </div>
-                ` : ''}
-              </div>
-              <div class="mt-2 pt-2 border-t flex items-center gap-2 text-xs text-green-600">
-                <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-                <span class="font-semibold">EN VIVO</span>
-              </div>
-            </div>
-          `);
+        const busId = el.getAttribute('data-bus-id');
+        const bus = busId ? busMap.get(busId) : null;
+        
+        if (bus) {
+          // Actualizar posición del marcador existente
+          marker.setLngLat([bus.longitud, bus.latitud]);
+          busMap.delete(busId!);
+          return true;
+        } else {
+          // Remover marcador si el bus ya no existe
+          marker.remove();
+          return false;
         }
-        
-        busMap.delete(busId!);
-        return true;
-      } else {
-        // Remover marcador si el bus ya no existe
-        marker.remove();
-        return false;
-      }
-    });
+      });
 
-    // Crear marcadores para buses nuevos
-    busMap.forEach(bus => {
-      const el = document.createElement('div');
-      el.className = 'bus-marker';
-      el.setAttribute('data-bus-id', bus.id);
-      el.innerHTML = `
-        <div class="relative">
-          <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white shadow-lg cursor-pointer hover:scale-125 transition-transform">
-            🚌
+      // Crear marcadores para buses nuevos
+      busMap.forEach(bus => {
+        const el = document.createElement('div');
+        el.className = 'bus-marker';
+        el.setAttribute('data-bus-id', bus.id);
+        el.innerHTML = `
+          <div class="relative">
+            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white shadow-lg cursor-pointer hover:scale-125 transition-transform">
+              🚌
+            </div>
+            <div class="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
           </div>
-          <div class="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-        </div>
-      `;
+        `;
 
-      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
-        <div class="p-3 min-w-[200px]">
-          <h3 class="font-bold text-lg mb-2">${bus.nombre}</h3>
-          <div class="space-y-2 text-sm">
-            <div class="flex justify-between">
-              <span class="text-gray-600">Línea:</span>
-              <span class="font-semibold">${bus.rutaCodigo}</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-gray-600">Velocidad:</span>
-              <span class="font-semibold">${Math.round(bus.velocidad)} km/h</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-gray-600">Progreso:</span>
-              <span class="font-semibold">${Math.round(bus.progreso)}%</span>
-            </div>
-            ${bus.placa ? `
+        const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
+          <div class="p-3 min-w-[200px]">
+            <h3 class="font-bold text-lg mb-2">${bus.nombre}</h3>
+            <div class="space-y-2 text-sm">
               <div class="flex justify-between">
-                <span class="text-gray-600">Placa:</span>
-                <span class="font-mono font-semibold">${bus.placa}</span>
+                <span class="text-gray-600">Línea:</span>
+                <span class="font-semibold">${bus.rutaCodigo}</span>
               </div>
-            ` : ''}
+              <div class="flex justify-between">
+                <span class="text-gray-600">Velocidad:</span>
+                <span class="font-semibold">${Math.round(bus.velocidad)} km/h</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">Progreso:</span>
+                <span class="font-semibold">${Math.round(bus.progreso)}%</span>
+              </div>
+              ${bus.placa ? `
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Placa:</span>
+                  <span class="font-mono font-semibold">${bus.placa}</span>
+                </div>
+              ` : ''}
+            </div>
+            <div class="mt-2 pt-2 border-t flex items-center gap-2 text-xs text-green-600">
+              <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+              <span class="font-semibold">EN VIVO</span>
+            </div>
           </div>
-          <div class="mt-2 pt-2 border-t flex items-center gap-2 text-xs text-green-600">
-            <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-            <span class="font-semibold">EN VIVO</span>
-          </div>
-        </div>
-      `);
+        `);
 
-      const marker = new mapboxgl.Marker(el)
-        .setLngLat([bus.longitud, bus.latitud])
-        .setPopup(popup)
-        .addTo(map.current!);
+        const marker = new mapboxgl.Marker(el)
+          .setLngLat([bus.longitud, bus.latitud])
+          .setPopup(popup)
+          .addTo(map.current!);
 
-      markersRef.current.push(marker);
-    });
+        markersRef.current.push(marker);
+      });
+    };
+
+    // Si el mapa ya está listo, actualizar inmediatamente
+    if (map.current.loaded()) {
+      updateBuses();
+    } else {
+      // Esperar a que el mapa esté completamente listo
+      map.current.once('load', updateBuses);
+    }
   }, [buses, mostrarBuses]);
 
   if (loading) {
