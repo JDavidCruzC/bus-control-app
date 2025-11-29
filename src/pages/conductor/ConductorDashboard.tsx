@@ -96,7 +96,7 @@ export default function ConductorDashboard() {
           ruta:rutas(nombre, codigo)
         `)
         .eq('conductor_id', conductorData.id)
-        .in('estado', ['en_curso', 'iniciado'])
+        .in('estado', ['en_curso', 'programado'])
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -118,7 +118,7 @@ export default function ConductorDashboard() {
         .from('viajes')
         .insert({
           conductor_id: conductor.id,
-          estado: 'iniciado',
+          estado: 'en_curso',
           fecha_hora_inicio: new Date().toISOString(),
           pasajeros_subidos: 0,
           direccion: 'ida'
@@ -152,7 +152,7 @@ export default function ConductorDashboard() {
       const { error } = await supabase
         .from('viajes')
         .update({
-          estado: 'finalizado',
+          estado: 'completado',
           fecha_hora_fin: new Date().toISOString()
         })
         .eq('id', viajeActual.id);
