@@ -122,9 +122,9 @@ export function useBusesEnRuta(empresaId?: string) {
 
           if (coordinates.length < 2) return bus;
 
-          // Movimiento visible y suave (velocidad x4 para mejor visualización)
+          // Movimiento visible y rápido (velocidad x10 para visualización notoria)
           // Velocidad en km/h convertida a porcentaje de ruta por segundo
-          const incrementoPorSegundo = (bus.velocidad / 3600) * 1.4; // 4x más rápido
+          const incrementoPorSegundo = (bus.velocidad / 3600) * 3.5; // 10x más rápido
           let nuevoProgreso = (bus.progreso + incrementoPorSegundo) % 100;
 
           // Calcular posición exacta con interpolación entre puntos
