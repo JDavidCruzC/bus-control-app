@@ -44,7 +44,8 @@ export function MapaRutasPublicas({
 
   // Initialize map
   useEffect(() => {
-    if (!mapContainer.current || !mapToken || map.current) return;
+    if (!mapContainer.current || !mapToken) return;
+    if (map.current) return;
 
     mapboxgl.accessToken = mapToken;
 
@@ -54,7 +55,7 @@ export function MapaRutasPublicas({
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
+      style: 'mapbox://styles/mapbox/light-v11',
       center: [defaultLng, defaultLat],
       zoom: defaultZoom,
     });
@@ -62,18 +63,22 @@ export function MapaRutasPublicas({
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
     map.current.on('load', () => {
-      cargarRutasYParaderos();
+      if (map.current?.isStyleLoaded()) {
+        cargarRutasYParaderos();
+      }
     });
 
     return () => {
       markersRef.current.forEach(m => m.remove());
+      markersRef.current = [];
       map.current?.remove();
+      map.current = null;
     };
   }, [mapToken, getConfigValue]);
 
   // Cargar rutas y paraderos
   const cargarRutasYParaderos = async () => {
-    if (!map.current) return;
+    if (!map.current || !map.current.isStyleLoaded()) return;
 
     try {
       // Cargar geometrías de rutas
