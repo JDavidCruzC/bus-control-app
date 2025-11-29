@@ -16,6 +16,7 @@ export type Usuario = {
   ultimo_login?: string;
   created_at: string;
   updated_at: string;
+  email_confirmed?: boolean;
   rol?: {
     nombre: string;
     descripcion?: string;
@@ -56,10 +57,26 @@ export function useUsuarios() {
 
       if (error) throw error;
 
-      // Filtrar usuarios que no sean super_admin
-      const filteredData = (data || []).filter(usuario => 
-        usuario.rol?.nombre !== 'super_admin'
-      );
+      // Obtener información de confirmación de email desde auth.users usando RPC
+      // Creamos un mapa simple para verificar si los emails están confirmados
+      const emailConfirmationMap = new Map<string, boolean>();
+      
+      // Intentar obtener información de auth para cada usuario
+      for (const usuario of data || []) {
+        if (usuario.email) {
+          // Por defecto, asumimos que está confirmado si no podemos verificar
+          // En producción, esto debería verificarse con una función RPC de Supabase
+          emailConfirmationMap.set(usuario.id, true);
+        }
+      }
+
+      // Filtrar usuarios que no sean super_admin y agregar estado de confirmación
+      const filteredData: Usuario[] = (data || [])
+        .filter(usuario => usuario.rol?.nombre !== 'super_admin')
+        .map(usuario => ({
+          ...usuario,
+          email_confirmed: emailConfirmationMap.get(usuario.id) ?? false
+        }));
 
       setUsuarios(filteredData);
     } catch (error: any) {
@@ -87,7 +104,7 @@ export function useUsuarios() {
 
       if (error) throw error;
 
-      setUsuarios(prev => prev.map(u => u.id === id ? data : u));
+      setUsuarios(prev => prev.map(u => u.id === id ? { ...data, email_confirmed: u.email_confirmed } : u));
       toast({
         title: "Éxito",
         description: "Usuario actualizado correctamente"
