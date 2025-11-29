@@ -15,10 +15,12 @@ import { RefreshCw, MapPin, Clock, Gauge, AlertCircle, Building2, Filter, Bus } 
 const EMPRESA_COLORS = ["#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899"];
 
 export default function UbicacionTiempoReal() {
-  const { buses, loading } = useBusesEnRuta();
-  const { empresas } = useEmpresas();
   const [empresaFiltro, setEmpresaFiltro] = useState<string | null>(null);
+  const [rutaFiltro, setRutaFiltro] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  
+  const { buses, loading } = useBusesEnRuta(empresaFiltro || undefined);
+  const { empresas } = useEmpresas();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -28,9 +30,18 @@ export default function UbicacionTiempoReal() {
     return () => clearInterval(interval);
   }, []);
 
-  let vehiculosActivos = empresaFiltro 
-    ? buses.filter(b => b.empresaId === empresaFiltro)
+  // Filtrar buses por ruta si hay filtro activo
+  let vehiculosActivos = rutaFiltro 
+    ? buses.filter(b => b.rutaId === rutaFiltro)
     : buses;
+
+  // Obtener rutas únicas para el selector
+  const rutasUnicas = Array.from(new Set(buses.map(b => ({
+    id: b.rutaId,
+    codigo: b.rutaCodigo,
+    nombre: b.rutaNombre,
+    empresaId: b.empresaId
+  })).map(r => JSON.stringify(r)))).map(s => JSON.parse(s));
 
   // Agrupar por empresa
   const vehiculosPorEmpresa = vehiculosActivos.reduce((acc, bus) => {
@@ -103,10 +114,15 @@ export default function UbicacionTiempoReal() {
           </div>
         </div>
 
-        {/* Filtro de Empresa */}
-        <div className="flex items-center gap-2">
+        {/* Filtros */}
+        <div className="flex items-center gap-4">
           <Filter className="h-5 w-5 text-muted-foreground" />
-          <Select value={empresaFiltro || "todas"} onValueChange={(v) => setEmpresaFiltro(v === "todas" ? null : v)}>
+          
+          {/* Filtro de Empresa */}
+          <Select value={empresaFiltro || "todas"} onValueChange={(v) => {
+            setEmpresaFiltro(v === "todas" ? null : v);
+            setRutaFiltro(null); // Resetear filtro de ruta al cambiar empresa
+          }}>
             <SelectTrigger className="w-[280px]">
               <SelectValue placeholder="Todas las empresas" />
             </SelectTrigger>
@@ -117,6 +133,25 @@ export default function UbicacionTiempoReal() {
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: empresaColorMap.get(empresa.id) }} />
                     {empresa.nombre}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Filtro de Ruta */}
+          <Select value={rutaFiltro || "todas_rutas"} onValueChange={(v) => setRutaFiltro(v === "todas_rutas" ? null : v)}>
+            <SelectTrigger className="w-[280px]">
+              <SelectValue placeholder="Todas las líneas" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas_rutas">Todas las líneas</SelectItem>
+              {rutasUnicas.map((ruta) => (
+                <SelectItem key={ruta.id} value={ruta.id}>
+                  <div className="flex items-center gap-2">
+                    <Bus className="h-3 w-3" />
+                    <span className="font-semibold">Línea {ruta.codigo}</span>
+                    <span className="text-muted-foreground">- {ruta.nombre}</span>
                   </div>
                 </SelectItem>
               ))}
