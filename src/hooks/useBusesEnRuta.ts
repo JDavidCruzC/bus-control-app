@@ -122,9 +122,9 @@ export function useBusesEnRuta(empresaId?: string) {
 
           if (coordinates.length < 2) return bus;
 
-          // Incremento muy pequeño para movimiento ultra suave (simulación km por km)
-          // Velocidad en km/h convertida a porcentaje de ruta por segundo, con factor de suavizado
-          const incrementoPorSegundo = (bus.velocidad / 3600) * 0.15; // Movimiento muy gradual
+          // Movimiento suave y visible (ajustado para ser notorio pero sin saltos)
+          // Velocidad en km/h convertida a porcentaje de ruta por segundo
+          const incrementoPorSegundo = (bus.velocidad / 3600) * 0.35; // Balance entre suavidad y visibilidad
           let nuevoProgreso = (bus.progreso + incrementoPorSegundo) % 100;
 
           // Calcular posición exacta con interpolación entre puntos

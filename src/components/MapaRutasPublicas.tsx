@@ -344,12 +344,12 @@ export function MapaRutasPublicas({
       )}
 
       {/* Estadísticas */}
-      <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur rounded-lg p-3 shadow-lg">
+      <div className="absolute bottom-4 left-4 bg-background/95 backdrop-blur border border-border rounded-lg p-3 shadow-lg">
         <div className="grid grid-cols-2 gap-3 text-xs">
           {mostrarBuses && (
             <div>
-              <div className="text-gray-600">Buses Activos</div>
-              <div className="font-bold text-green-600 text-lg">{buses.length}</div>
+              <div className="text-muted-foreground">Buses Activos</div>
+              <div className="font-bold text-primary text-lg">{buses.length}</div>
             </div>
           )}
         </div>
