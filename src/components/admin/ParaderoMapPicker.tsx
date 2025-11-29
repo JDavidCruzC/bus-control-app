@@ -82,6 +82,9 @@ export function ParaderoMapPicker({ latitude, longitude, onLocationChange }: Par
     });
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    
+    // Enable scroll zoom for better interaction
+    map.current.scrollZoom.enable();
 
     // Add initial marker
     marker.current = new mapboxgl.Marker({ draggable: true, color: '#FF6B6B' })
