@@ -71,11 +71,11 @@ export function useBusesEnRuta(empresaId?: string) {
 
         if (coordinates.length < 2) continue;
 
-        // Crear 3-4 buses por ruta para simular tráfico realista
-        const numBuses = Math.floor(Math.random() * 2) + 3; // 3 o 4 buses
+        // Crear 6-8 buses por ruta para simular tráfico realista
+        const numBuses = Math.floor(Math.random() * 3) + 6; // 6, 7 u 8 buses
         
         for (let i = 0; i < numBuses; i++) {
-          const progresoInicial = (i * 25) % 100; // Distribuir buses a lo largo de la ruta
+          const progresoInicial = (i * (100 / numBuses)) % 100; // Distribuir buses uniformemente
           const posicionEnRuta = Math.floor((coordinates.length - 1) * (progresoInicial / 100));
           const coord = coordinates[posicionEnRuta];
 
@@ -85,7 +85,7 @@ export function useBusesEnRuta(empresaId?: string) {
             placa: `${rutaGeom.ruta.codigo}${String(i + 1).padStart(2, '0')}`,
             latitud: coord[1],
             longitud: coord[0],
-            velocidad: 25 + Math.random() * 25, // 25-50 km/h
+            velocidad: 30 + Math.random() * 20, // 30-50 km/h
             progreso: progresoInicial,
             rutaId: rutaGeom.ruta_id,
             rutaCodigo: rutaGeom.ruta.codigo,
@@ -122,9 +122,9 @@ export function useBusesEnRuta(empresaId?: string) {
 
           if (coordinates.length < 2) return bus;
 
-          // Incremento más pequeño para movimiento suave (ajustado a velocidad real)
-          // Velocidad en km/h convertida a porcentaje de ruta por segundo
-          const incrementoPorSegundo = (bus.velocidad / 3600) * 0.5; // Más realista
+          // Incremento muy pequeño para movimiento ultra suave (simulación km por km)
+          // Velocidad en km/h convertida a porcentaje de ruta por segundo, con factor de suavizado
+          const incrementoPorSegundo = (bus.velocidad / 3600) * 0.15; // Movimiento muy gradual
           let nuevoProgreso = (bus.progreso + incrementoPorSegundo) % 100;
 
           // Calcular posición exacta con interpolación entre puntos
@@ -141,7 +141,7 @@ export function useBusesEnRuta(empresaId?: string) {
           const latitudInterpolada = coordInferior[1] + (coordSuperior[1] - coordInferior[1]) * factor;
 
           // Variar velocidad muy ligeramente para realismo
-          const nuevaVelocidad = Math.max(25, Math.min(50, bus.velocidad + (Math.random() - 0.5) * 2));
+          const nuevaVelocidad = Math.max(30, Math.min(50, bus.velocidad + (Math.random() - 0.5) * 1));
 
           return {
             ...bus,
