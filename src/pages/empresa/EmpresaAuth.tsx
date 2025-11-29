@@ -215,7 +215,7 @@ export default function EmpresaAuth() {
                     id="login-email"
                     type="text"
                     autoComplete="email"
-                    placeholder="empresa@ejemplo.com"
+                    placeholder="tucorreo@email.com"
                     value={loginData.email}
                     onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
                     required
@@ -287,7 +287,7 @@ export default function EmpresaAuth() {
                     id="register-email"
                     type="text"
                     autoComplete="email"
-                    placeholder="empresa@ejemplo.com"
+                    placeholder="tucorreo@email.com"
                     value={registerData.email}
                     onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
                     required
