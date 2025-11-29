@@ -1027,6 +1027,7 @@ export type Database = {
           activo: boolean | null
           apellido: string | null
           cedula: string | null
+          codigo_usuario: string | null
           created_at: string | null
           email: string | null
           empresa_id: string | null
@@ -1041,6 +1042,7 @@ export type Database = {
           activo?: boolean | null
           apellido?: string | null
           cedula?: string | null
+          codigo_usuario?: string | null
           created_at?: string | null
           email?: string | null
           empresa_id?: string | null
@@ -1055,6 +1057,7 @@ export type Database = {
           activo?: boolean | null
           apellido?: string | null
           cedula?: string | null
+          codigo_usuario?: string | null
           created_at?: string | null
           email?: string | null
           empresa_id?: string | null
