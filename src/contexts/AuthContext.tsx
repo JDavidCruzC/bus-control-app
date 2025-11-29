@@ -9,7 +9,7 @@ interface AuthContextType {
   userData: any;
   userRole: string | null;
   loading: boolean;
-  signInWorker: (email: string, password: string) => Promise<{ error: any }>;
+  signInWorker: (codigoUsuario: string, password: string) => Promise<{ error: any }>;
   signInConductor: (placa: string, password: string) => Promise<{ error: any }>;
   signInClient: (email: string, password: string) => Promise<{ error: any }>;
   signInEmpresa: (email: string, password: string) => Promise<{ error: any }>;
@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUserData = async (userId: string) => {
     try {
-      // Intentar obtener datos de trabajador primero
+      // Primero obtener datos de trabajador para conocer su rol
       const { data: trabajadorData } = await supabase
         .from('usuarios')
         .select(`
@@ -41,24 +41,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .maybeSingle();
 
       if (trabajadorData) {
-        setUserType('trabajador');
-        setUserData(trabajadorData);
-        setUserRole(trabajadorData.rol?.nombre || null);
-        return;
-      }
+        const rolNombre = trabajadorData.rol?.nombre;
+        
+        // Si es conductor o cobrador, buscar en la tabla conductores
+        if (rolNombre === 'conductor' || rolNombre === 'cobrador') {
+          const { data: conductorData } = await supabase
+            .from('conductores')
+            .select('*')
+            .eq('usuario_id', userId)
+            .maybeSingle();
 
-      // Intentar obtener datos de conductor
-      const { data: conductorData } = await supabase
-        .from('conductores')
-        .select('*')
-        .eq('usuario_id', userId)
-        .maybeSingle();
-
-      if (conductorData) {
-        setUserType('conductor');
-        setUserData(conductorData);
-        setUserRole('conductor');
-        return;
+          if (conductorData) {
+            setUserType('conductor');
+            setUserData({ ...trabajadorData, conductor: conductorData });
+            setUserRole(rolNombre);
+            return;
+          }
+        }
+        
+        // Si es administrador o gerente
+        if (rolNombre === 'administrador' || rolNombre === 'gerente') {
+          setUserType('trabajador');
+          setUserData(trabajadorData);
+          setUserRole(rolNombre);
+          return;
+        }
       }
 
       // Si no es trabajador ni conductor, intentar obtener datos de cliente
@@ -124,59 +131,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signInWorker = async (email: string, password: string) => {
-    // Si es el admin por primera vez, crear el usuario
-    if (email === 'admin@sistema.com') {
-      try {
-        // Intentar login primero
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-        
-        // Si el login falla, crear el admin user
-        if (error && error.message.includes('Invalid login credentials')) {
-          const response = await fetch(`https://kovmtspchvtcwysxibiy.supabase.co/functions/v1/setup-admin`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtvdm10c3BjaHZ0Y3d5c3hpYml5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwMTQ3NDEsImV4cCI6MjA3MjU5MDc0MX0.uzGqOSN-bykf140o-VPsKdv6-pBalxGqvEGJmRSPS4o`,
-              'Content-Type': 'application/json'
-            }
-          });
-          
-          const result = await response.json();
-          
-          if (result.success && result.temporaryPassword) {
-            // Ahora intentar login con la contraseña temporal
-            const { error: loginError } = await supabase.auth.signInWithPassword({
-              email,
-              password: result.temporaryPassword
-            });
-            
-            if (!loginError) {
-              // Informar al usuario que debe cambiar la contraseña
-              throw new Error('Admin creado. Use la contraseña temporal del log para iniciar sesión y cámbiela inmediatamente.');
-            }
-            return { error: loginError };
-          } else {
-            return { error: { message: result.error || 'Error creando admin' } };
-          }
-        }
-        
-        return { error };
-        
-      } catch (err: any) {
-        return { error: { message: err.message || 'Error interno del servidor' } };
+  const signInWorker = async (codigoUsuario: string, password: string) => {
+    try {
+      // Usar la función de base de datos para obtener el email por código de usuario
+      const { data: usuarioInfo, error: usuarioError } = await supabase
+        .rpc('get_usuario_email_by_codigo', { codigo_input: codigoUsuario });
+
+      if (usuarioError || !usuarioInfo || usuarioInfo.length === 0) {
+        return { error: { message: 'Código de usuario no encontrado o usuario inactivo' } };
       }
+
+      const email = usuarioInfo[0].email;
+
+      // Usar el email del usuario para autenticar
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      return { error };
+    } catch (err: any) {
+      return { error: { message: err.message || 'Error al iniciar sesión' } };
     }
-    
-    // Para otros usuarios, login normal
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-    
-    return { error };
   };
 
   const signInConductor = async (placa: string, password: string) => {

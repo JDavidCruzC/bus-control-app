@@ -1537,6 +1537,15 @@ export type Database = {
       }
       get_current_user_empresa_id: { Args: never; Returns: string }
       get_current_user_role: { Args: never; Returns: string }
+      get_usuario_email_by_codigo: {
+        Args: { codigo_input: string }
+        Returns: {
+          apellido: string
+          email: string
+          nombre: string
+          user_id: string
+        }[]
+      }
       gettransactionid: { Args: never; Returns: unknown }
       longtransactionsenabled: { Args: never; Returns: boolean }
       populate_geometry_columns:

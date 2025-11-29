@@ -10,10 +10,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Bus, ArrowLeft, Users, Truck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { loginSchema, conductorLoginSchema } from "@/lib/validations/auth";
+import { codigoUsuarioLoginSchema, conductorLoginSchema } from "@/lib/validations/auth";
 
 const WorkerLogin = () => {
-  const [email, setEmail] = useState("");
+  const [codigoUsuario, setCodigoUsuario] = useState("");
   const [placa, setPlaca] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -31,8 +31,8 @@ const WorkerLogin = () => {
 
     try {
       // Validate input
-      const validation = loginSchema.safeParse({
-        email,
+      const validation = codigoUsuarioLoginSchema.safeParse({
+        codigo: codigoUsuario,
         password,
       });
 
@@ -41,14 +41,14 @@ const WorkerLogin = () => {
         throw new Error(firstError.message);
       }
 
-      const { error: signInError } = await signInWorker(validation.data.email, validation.data.password);
+      const { error: signInError } = await signInWorker(validation.data.codigo, validation.data.password);
 
       if (signInError) {
         throw new Error(signInError.message || "Credenciales incorrectas");
       }
 
       toast({
-        title: "Bienvenido Administrador",
+        title: "Bienvenido",
         description: "Inicio de sesión exitoso",
       });
       navigate("/admin");
@@ -151,13 +151,13 @@ const WorkerLogin = () => {
               <TabsContent value="admin" className="space-y-4 mt-4">
                 <form onSubmit={handleAdminSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="admin-email">Email Corporativo</Label>
+                    <Label htmlFor="admin-codigo">Código de Usuario</Label>
                     <Input
-                      id="admin-email"
-                      type="email"
-                      placeholder="admin@empresa.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      id="admin-codigo"
+                      type="text"
+                      placeholder="ADM001"
+                      value={codigoUsuario}
+                      onChange={(e) => setCodigoUsuario(e.target.value.toUpperCase())}
                       required
                     />
                   </div>

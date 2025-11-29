@@ -256,6 +256,7 @@ export function GestionUsuarios() {
             <TableHeader>
               <TableRow>
                 <TableHead>Usuario</TableHead>
+                <TableHead>Código/Placa</TableHead>
                 <TableHead>Rol</TableHead>
                 <TableHead>Contacto</TableHead>
                 <TableHead>Último Login</TableHead>
@@ -278,6 +279,11 @@ export function GestionUsuarios() {
                         <p className="text-sm text-muted-foreground">{usuario.email}</p>
                       </div>
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="font-mono">
+                      {usuario.codigo_usuario || "N/A"}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <Badge className={getRoleColor(usuario.rol?.nombre)}>

@@ -9,6 +9,7 @@ export type Usuario = {
   apellido?: string;
   telefono?: string;
   cedula?: string;
+  codigo_usuario?: string;
   activo: boolean;
   empresa_id?: string;
   rol_id?: string;

@@ -57,6 +57,17 @@ export const conductorLoginSchema = z.object({
   password: z.string().min(1, { message: 'La contraseña es requerida' }),
 });
 
+// Código de usuario login schema
+export const codigoUsuarioLoginSchema = z.object({
+  codigo: z
+    .string()
+    .trim()
+    .min(1, { message: 'El código de usuario es requerido' })
+    .max(50, { message: 'El código es demasiado largo' }),
+  password: z.string().min(1, { message: 'La contraseña es requerida' }),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegistrationInput = z.infer<typeof registrationSchema>;
 export type ConductorLoginInput = z.infer<typeof conductorLoginSchema>;
+export type CodigoUsuarioLoginInput = z.infer<typeof codigoUsuarioLoginSchema>;
