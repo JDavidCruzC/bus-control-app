@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useConfiguraciones } from "@/hooks/useConfiguraciones";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ChangePasswordDialog } from "@/components/admin/ChangePasswordDialog";
 import { 
   Settings, 
   Save,
@@ -20,7 +22,9 @@ import {
   Clock,
   Users,
   Truck,
-  MapPin
+  MapPin,
+  Lock,
+  User
 } from "lucide-react";
 import {
   Tabs,
@@ -37,8 +41,10 @@ import {
 } from "@/components/ui/select";
 
 export function Ajustes() {
+  const { userData } = useAuth();
   const { configuraciones, loading, updateConfiguracion } = useConfiguraciones();
   const [hasChanges, setHasChanges] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
 
   // Estados locales para las configuraciones
   const [config, setConfig] = useState({
@@ -114,8 +120,14 @@ export function Ajustes() {
         </Button>
       </div>
 
-      <Tabs defaultValue="general" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6">
+      <ChangePasswordDialog 
+        open={passwordDialogOpen} 
+        onOpenChange={setPasswordDialogOpen} 
+      />
+
+      <Tabs defaultValue="perfil" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-7">
+          <TabsTrigger value="perfil">Mi Perfil</TabsTrigger>
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="notificaciones">Notificaciones</TabsTrigger>
           <TabsTrigger value="seguridad">Seguridad</TabsTrigger>
@@ -123,6 +135,104 @@ export function Ajustes() {
           <TabsTrigger value="integraciones">Integraciones</TabsTrigger>
           <TabsTrigger value="avanzado">Avanzado</TabsTrigger>
         </TabsList>
+
+        {/* Mi Perfil */}
+        <TabsContent value="perfil">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Información Personal
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Nombre</Label>
+                  <Input
+                    value={userData?.nombre || ""}
+                    disabled
+                    className="bg-muted"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Solo el gerente puede modificar esta información
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Apellido</Label>
+                  <Input
+                    value={userData?.apellido || ""}
+                    disabled
+                    className="bg-muted"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Email</Label>
+                  <Input
+                    value={userData?.email || ""}
+                    disabled
+                    className="bg-muted"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Rol</Label>
+                  <Input
+                    value={userData?.rol?.nombre || ""}
+                    disabled
+                    className="bg-muted capitalize"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Lock className="h-5 w-5" />
+                  Seguridad
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Código de Usuario / Placa</Label>
+                  <Input
+                    value={userData?.codigo_usuario || "No asignado"}
+                    disabled
+                    className="bg-muted"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Este código no puede ser modificado por ti
+                  </p>
+                </div>
+
+                <div className="pt-4">
+                  <Label className="mb-3 block">Contraseña</Label>
+                  <Button 
+                    onClick={() => setPasswordDialogOpen(true)}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <Lock className="h-4 w-4 mr-2" />
+                    Cambiar Contraseña
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Actualiza tu contraseña de acceso al sistema
+                  </p>
+                </div>
+
+                <div className="pt-4 p-4 bg-muted rounded-lg">
+                  <p className="text-sm font-medium mb-2">Último acceso</p>
+                  <p className="text-xs text-muted-foreground">
+                    {userData?.ultimo_login ? new Date(userData.ultimo_login).toLocaleString('es-ES') : "N/A"}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
 
         {/* General */}
         <TabsContent value="general">

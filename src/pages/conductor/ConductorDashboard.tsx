@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, Navigation, Clock, Users, AlertTriangle, CheckCircle, Play, Square } from "lucide-react";
+import { ChangePasswordDialog } from "@/components/admin/ChangePasswordDialog";
+import { MapPin, Navigation, Clock, Users, AlertTriangle, CheckCircle, Play, Square, Lock, Settings as SettingsIcon } from "lucide-react";
 
 type Viaje = {
   id: string;
@@ -38,10 +40,12 @@ type Conductor = {
 };
 
 export default function ConductorDashboard() {
+  const { userData } = useAuth();
   const [conductor, setConductor] = useState<Conductor | null>(null);
   const [viajeActual, setViajeActual] = useState<Viaje | null>(null);
   const [ubicacionActiva, setUbicacionActiva] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -252,6 +256,11 @@ export default function ConductorDashboard() {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-6xl mx-auto space-y-6">
+        <ChangePasswordDialog 
+          open={passwordDialogOpen} 
+          onOpenChange={setPasswordDialogOpen} 
+        />
+
         {/* Header del conductor */}
         <div className="flex items-center justify-between">
           <div>
@@ -264,9 +273,19 @@ export default function ConductorDashboard() {
               </p>
             )}
           </div>
-          <Badge variant={conductor?.activo ? 'default' : 'secondary'}>
-            {conductor?.activo ? 'Activo' : 'Inactivo'}
-          </Badge>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setPasswordDialogOpen(true)}
+            >
+              <Lock className="h-4 w-4 mr-2" />
+              Cambiar Contraseña
+            </Button>
+            <Badge variant={conductor?.activo ? 'default' : 'secondary'}>
+              {conductor?.activo ? 'Activo' : 'Inactivo'}
+            </Badge>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
