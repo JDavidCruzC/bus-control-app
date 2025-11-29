@@ -1541,6 +1541,12 @@ export type Database = {
       }
       get_current_user_empresa_id: { Args: never; Returns: string }
       get_current_user_role: { Args: never; Returns: string }
+      get_user_email_confirmation: {
+        Args: { user_id_input: string }
+        Returns: {
+          email_confirmed: boolean
+        }[]
+      }
       get_usuario_email_by_codigo: {
         Args: { codigo_input: string }
         Returns: {
