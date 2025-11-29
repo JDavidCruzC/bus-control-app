@@ -81,12 +81,12 @@ export function RutaMapViewer({ rutaId }: RutaMapViewerProps) {
       if (coordinates.length < 2) return;
 
       // Wait for map to load
-      if (!map.current.isStyleLoaded()) {
-        map.current.on('load', () => {
+      if (map.current.isStyleLoaded()) {
+        addRouteToMap(coordinates);
+      } else {
+        map.current.once('load', () => {
           addRouteToMap(coordinates);
         });
-      } else {
-        addRouteToMap(coordinates);
       }
     } catch (error) {
       console.error('Error parsing route geometry:', error);
@@ -94,7 +94,7 @@ export function RutaMapViewer({ rutaId }: RutaMapViewerProps) {
   }, [rutasGeom, rutaId]);
 
   const addRouteToMap = (coordinates: [number, number][]) => {
-    if (!map.current) return;
+    if (!map.current || !map.current.isStyleLoaded()) return;
 
     // Remove existing route layer if it exists
     if (map.current.getLayer('route')) {

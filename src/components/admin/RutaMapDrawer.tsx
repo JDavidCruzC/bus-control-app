@@ -84,46 +84,59 @@ export function RutaMapDrawer({ onRouteChange, initialRoute = [] }: RutaMapDrawe
   useEffect(() => {
     if (!map.current || coordinates.length < 2) return;
 
-    // Remove existing route layer if it exists
-    if (map.current.getLayer('route')) {
-      map.current.removeLayer('route');
-      map.current.removeSource('route');
-    }
+    const updateRoute = () => {
+      if (!map.current) return;
 
-    // Add route line
-    map.current.addSource('route', {
-      type: 'geojson',
-      data: {
-        type: 'Feature',
-        properties: {},
-        geometry: {
-          type: 'LineString',
-          coordinates: coordinates,
+      // Remove existing route layer if it exists
+      if (map.current.getLayer('route')) {
+        map.current.removeLayer('route');
+      }
+      if (map.current.getSource('route')) {
+        map.current.removeSource('route');
+      }
+
+      // Add route line
+      map.current.addSource('route', {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          properties: {},
+          geometry: {
+            type: 'LineString',
+            coordinates: coordinates,
+          },
         },
-      },
-    });
+      });
 
-    map.current.addLayer({
-      id: 'route',
-      type: 'line',
-      source: 'route',
-      layout: {
-        'line-join': 'round',
-        'line-cap': 'round',
-      },
-      paint: {
-        'line-color': '#3B82F6',
-        'line-width': 4,
-      },
-    });
+      map.current.addLayer({
+        id: 'route',
+        type: 'line',
+        source: 'route',
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round',
+        },
+        paint: {
+          'line-color': '#3B82F6',
+          'line-width': 4,
+        },
+      });
 
-    // Fit map to show all points
-    if (coordinates.length > 0) {
-      const bounds = coordinates.reduce(
-        (bounds, coord) => bounds.extend(coord as [number, number]),
-        new mapboxgl.LngLatBounds(coordinates[0], coordinates[0])
-      );
-      map.current.fitBounds(bounds, { padding: 50 });
+      // Fit map to show all points
+      if (coordinates.length > 0) {
+        const bounds = coordinates.reduce(
+          (bounds, coord) => bounds.extend(coord as [number, number]),
+          new mapboxgl.LngLatBounds(coordinates[0], coordinates[0])
+        );
+        map.current.fitBounds(bounds, { padding: 50 });
+      }
+    };
+
+    // Check if style is loaded, if not wait for load event
+    if (map.current.isStyleLoaded()) {
+      updateRoute();
+    } else {
+      map.current.once('load', updateRoute);
     }
   }, [coordinates]);
 
