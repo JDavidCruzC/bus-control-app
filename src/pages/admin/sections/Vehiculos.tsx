@@ -198,7 +198,7 @@ export function Vehiculos() {
                       {vehiculo.año && ` (${vehiculo.año})`}
                       {(vehiculo as any).rutas && (
                         <span className="block text-primary mt-1">
-                          Ruta: {(vehiculo as any).rutas.codigo} - {(vehiculo as any).rutas.nombre}
+                          Línea {(vehiculo as any).rutas.codigo} - {(vehiculo as any).rutas.nombre}
                         </span>
                       )}
                     </CardDescription>
