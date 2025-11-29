@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { UsuarioDialog } from "@/components/empresa/UsuarioDialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Search, 
   Plus, 
@@ -19,7 +21,8 @@ import {
   Phone,
   Mail,
   Calendar,
-  Shield
+  Shield,
+  CheckCircle
 } from "lucide-react";
 import {
   Select,
@@ -38,8 +41,9 @@ import {
 } from "@/components/ui/table";
 
 export function GestionUsuarios() {
-  const { usuarios, loading, updateUsuario } = useUsuarios();
+  const { usuarios, loading, updateUsuario, refetch } = useUsuarios();
   const { userRole } = useAuth();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [rolFilter, setRolFilter] = useState("todos");
   const [estadoFilter, setEstadoFilter] = useState("todos");
@@ -80,6 +84,39 @@ export function GestionUsuarios() {
 
   const getInitials = (nombre: string, apellido?: string) => {
     return `${nombre[0]}${apellido?.[0] || ''}`.toUpperCase();
+  };
+
+  const handleConfirmarEmail = async (usuario: any) => {
+    try {
+      const { data, error } = await supabase.rpc('confirmar_email_usuario', {
+        usuario_id_input: usuario.id
+      });
+
+      if (error) throw error;
+
+      const result = data as { success: boolean; message: string };
+      
+      if (result.success) {
+        toast({
+          title: "Éxito",
+          description: result.message
+        });
+        refetch();
+      } else {
+        toast({
+          title: "Error",
+          description: result.message,
+          variant: "destructive"
+        });
+      }
+    } catch (error: any) {
+      console.error('Error al confirmar email:', error);
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo confirmar el email",
+        variant: "destructive"
+      });
+    }
   };
 
   const getRoleColor = (roleName?: string) => {
@@ -309,9 +346,21 @@ export function GestionUsuarios() {
                   </TableCell>
                   <TableCell>
                     {usuario.email ? (
-                      <Badge variant={usuario.email_confirmed ? "default" : "secondary"}>
-                        {usuario.email_confirmed ? "Confirmado" : "Pendiente"}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={usuario.email_confirmed ? "default" : "secondary"}>
+                          {usuario.email_confirmed ? "Confirmado" : "Pendiente"}
+                        </Badge>
+                        {!usuario.email_confirmed && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleConfirmarEmail(usuario)}
+                            title="Confirmar email manualmente"
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
                     ) : (
                       <span className="text-muted-foreground text-sm">N/A</span>
                     )}
