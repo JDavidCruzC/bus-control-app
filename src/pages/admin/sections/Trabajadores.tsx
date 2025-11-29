@@ -292,9 +292,9 @@ export function Trabajadores() {
                      <Badge variant="secondary">
                        {usuario.rol?.nombre || 'Sin rol'}
                      </Badge>
-                     {usuario.ruta && (
+                     {usuario.linea && (
                        <Badge variant="outline" className="mt-1 text-xs block w-fit">
-                         {usuario.ruta.codigo} - {usuario.ruta.nombre}
+                         Línea {usuario.linea.codigo} - {usuario.linea.nombre}
                        </Badge>
                      )}
                    </TableCell>

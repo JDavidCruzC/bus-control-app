@@ -1042,6 +1042,7 @@ export type Database = {
           email: string | null
           empresa_id: string | null
           id: string
+          linea_id: string | null
           nombre: string
           rol_id: string | null
           telefono: string | null
@@ -1057,6 +1058,7 @@ export type Database = {
           email?: string | null
           empresa_id?: string | null
           id?: string
+          linea_id?: string | null
           nombre: string
           rol_id?: string | null
           telefono?: string | null
@@ -1072,6 +1074,7 @@ export type Database = {
           email?: string | null
           empresa_id?: string | null
           id?: string
+          linea_id?: string | null
           nombre?: string
           rol_id?: string | null
           telefono?: string | null
@@ -1084,6 +1087,13 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usuarios_linea_id_fkey"
+            columns: ["linea_id"]
+            isOneToOne: false
+            referencedRelation: "rutas"
             referencedColumns: ["id"]
           },
           {
