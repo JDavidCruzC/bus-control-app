@@ -58,9 +58,21 @@ export function ParaderoMapPicker({ latitude, longitude, onLocationChange }: Par
     const defaultLng = parseFloat(getConfigValue?.('map_default_lng') || '-71.3378');
     const defaultZoom = parseInt(getConfigValue?.('map_default_zoom') || '13');
 
-    // Priority: provided coordinates > user location > config default > Ilo, Peru
-    const initialLng = longitude || userLocation?.[0] || defaultLng;
-    const initialLat = latitude || userLocation?.[1] || defaultLat;
+    // Priority: user location > config default > provided coordinates (if valid) > Ilo, Peru
+    let initialLng = defaultLng;
+    let initialLat = defaultLat;
+    
+    // Use user location if available
+    if (userLocation) {
+      initialLng = userLocation[0];
+      initialLat = userLocation[1];
+    }
+    
+    // Override with provided coordinates only if they are valid (not 0,0)
+    if (longitude !== 0 && latitude !== 0) {
+      initialLng = longitude;
+      initialLat = latitude;
+    }
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,

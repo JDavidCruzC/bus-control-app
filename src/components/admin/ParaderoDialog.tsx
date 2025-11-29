@@ -26,8 +26,8 @@ export function ParaderoDialog({ open, onOpenChange, paradero }: ParaderoDialogP
     nombre: paradero?.nombre || '',
     descripcion: paradero?.descripcion || '',
     direccion: paradero?.direccion || '',
-    latitud: paradero?.latitud || -2.17,
-    longitud: paradero?.longitud || -79.92,
+    latitud: paradero?.latitud || 0,
+    longitud: paradero?.longitud || 0,
     activo: paradero?.activo ?? true,
     tiene_asientos: paradero?.tiene_asientos || false,
     tiene_techado: paradero?.tiene_techado || false,
@@ -60,7 +60,7 @@ export function ParaderoDialog({ open, onOpenChange, paradero }: ParaderoDialogP
       return;
     }
 
-    if (formData.latitud === -2.17 && formData.longitud === -79.92) {
+    if (formData.latitud === 0 && formData.longitud === 0) {
       toast({
         title: "Advertencia",
         description: "Por favor selecciona la ubicación en el mapa",
@@ -90,8 +90,8 @@ export function ParaderoDialog({ open, onOpenChange, paradero }: ParaderoDialogP
       nombre: '',
       descripcion: '',
       direccion: '',
-      latitud: -2.17,
-      longitud: -79.92,
+      latitud: 0,
+      longitud: 0,
       activo: true,
       tiene_asientos: false,
       tiene_techado: false,
@@ -205,8 +205,8 @@ export function ParaderoDialog({ open, onOpenChange, paradero }: ParaderoDialogP
                     type="number"
                     step="0.000001"
                     value={formData.latitud}
-                    onChange={(e) => setFormData({ ...formData, latitud: parseFloat(e.target.value) || -2.17 })}
-                    placeholder="-2.170042"
+                    onChange={(e) => setFormData({ ...formData, latitud: parseFloat(e.target.value) || 0 })}
+                    placeholder="-17.6396"
                   />
                 </div>
 
@@ -217,8 +217,8 @@ export function ParaderoDialog({ open, onOpenChange, paradero }: ParaderoDialogP
                     type="number"
                     step="0.000001"
                     value={formData.longitud}
-                    onChange={(e) => setFormData({ ...formData, longitud: parseFloat(e.target.value) || -79.92 })}
-                    placeholder="-79.922359"
+                    onChange={(e) => setFormData({ ...formData, longitud: parseFloat(e.target.value) || 0 })}
+                    placeholder="-71.3378"
                   />
                 </div>
               </div>
