@@ -227,6 +227,7 @@ export function Trabajadores() {
                 <TableHead>Usuario</TableHead>
                 <TableHead>Rol</TableHead>
                 <TableHead>Contacto</TableHead>
+                <TableHead>Email Confirmado</TableHead>
                 <TableHead>Último Login</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead>Acciones</TableHead>
@@ -273,6 +274,15 @@ export function Trabajadores() {
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground">Restringido</p>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {usuario.email ? (
+                      <Badge variant={usuario.email_confirmed ? "default" : "secondary"}>
+                        {usuario.email_confirmed ? "Confirmado" : "Pendiente"}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">N/A</span>
                     )}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">

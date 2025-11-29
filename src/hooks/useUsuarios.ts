@@ -35,17 +35,41 @@ export function useUsuarios() {
     try {
       // Obtener la empresa del usuario actual
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuario no encontrado');
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "No se pudo autenticar el usuario",
+          variant: "destructive"
+        });
+        return;
+      }
 
-      const { data: currentUser } = await supabase
+      const { data: currentUser, error: userError } = await supabase
         .from('usuarios')
-        .select('empresa_id')
+        .select('empresa_id, rol_id, rol:roles(nombre)')
         .eq('id', user.id)
         .single();
 
-      if (!currentUser?.empresa_id) throw new Error('Usuario sin empresa');
+      if (userError || !currentUser) {
+        toast({
+          title: "Error",
+          description: "No se pudo obtener la información del usuario",
+          variant: "destructive"
+        });
+        return;
+      }
 
-      // Obtener usuarios de la misma empresa
+      // Si no es super_admin, debe tener empresa_id
+      if (!currentUser.empresa_id && currentUser.rol?.nombre !== 'super_admin') {
+        toast({
+          title: "Error",
+          description: "Usuario sin empresa asignada",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Obtener usuarios de la misma empresa (excluir super_admin en el query)
       const { data, error } = await supabase
         .from('usuarios')
         .select(`
@@ -55,7 +79,14 @@ export function useUsuarios() {
         .eq('empresa_id', currentUser.empresa_id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar los usuarios de la empresa",
+          variant: "destructive"
+        });
+        return;
+      }
 
       // Obtener información de confirmación de email desde auth.users usando RPC
       // Creamos un mapa simple para verificar si los emails están confirmados
@@ -80,9 +111,10 @@ export function useUsuarios() {
 
       setUsuarios(filteredData);
     } catch (error: any) {
+      console.error('Error al cargar usuarios:', error);
       toast({
         title: "Error",
-        description: "No se pudieron cargar los usuarios",
+        description: error.message || "No se pudieron cargar los usuarios",
         variant: "destructive"
       });
     } finally {
@@ -102,7 +134,14 @@ export function useUsuarios() {
         `)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        toast({
+          title: "Error",
+          description: "No se pudo actualizar el usuario",
+          variant: "destructive"
+        });
+        throw error;
+      }
 
       setUsuarios(prev => prev.map(u => u.id === id ? { ...data, email_confirmed: u.email_confirmed } : u));
       toast({
@@ -111,11 +150,7 @@ export function useUsuarios() {
       });
       return data;
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar el usuario",
-        variant: "destructive"
-      });
+      console.error('Error al actualizar usuario:', error);
       throw error;
     }
   };
