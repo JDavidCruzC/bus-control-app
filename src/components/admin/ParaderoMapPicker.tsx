@@ -15,6 +15,21 @@ export function ParaderoMapPicker({ latitude, longitude, onLocationChange }: Par
   const marker = useRef<mapboxgl.Marker | null>(null);
   const [mapToken, setMapToken] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+
+  // Get user's current location
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation([position.coords.longitude, position.coords.latitude]);
+        },
+        (error) => {
+          console.log('Geolocation not available, using default location', error);
+        }
+      );
+    }
+  }, []);
 
   useEffect(() => {
     const fetchToken = async () => {
@@ -36,8 +51,9 @@ export function ParaderoMapPicker({ latitude, longitude, onLocationChange }: Par
 
     mapboxgl.accessToken = mapToken;
 
-    const initialLng = longitude || -79.92;
-    const initialLat = latitude || -2.17;
+    // Use provided coordinates, user location, or default to Guayaquil
+    const initialLng = longitude || userLocation?.[0] || -79.92;
+    const initialLat = latitude || userLocation?.[1] || -2.17;
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -69,7 +85,7 @@ export function ParaderoMapPicker({ latitude, longitude, onLocationChange }: Par
     return () => {
       map.current?.remove();
     };
-  }, [mapToken]);
+  }, [mapToken, userLocation]);
 
   // Update marker position when props change
   useEffect(() => {
