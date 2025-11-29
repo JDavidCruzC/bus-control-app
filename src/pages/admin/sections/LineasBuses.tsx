@@ -2,19 +2,34 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Bus, Plus, Edit, Search, Clock, DollarSign } from "lucide-react";
+import { Bus, Plus, Edit, Search, Clock, DollarSign, Trash2, Power, PowerOff } from "lucide-react";
 import { useLineasBuses, type LineaBus } from "@/hooks/useLineasBuses";
 import { LineaBusDialog } from "@/components/admin/LineaBusDialog";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SimulacionBusesCard } from "@/components/admin/SimulacionBusesCard";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export function LineasBuses() {
-  const { lineasBuses, loading } = useLineasBuses();
+  const { lineasBuses, loading, updateLineaBus, refetch } = useLineasBuses();
+  const { toast } = useToast();
   const [selectedLineaBus, setSelectedLineaBus] = useState<LineaBus | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<'all' | 'activo' | 'inactivo'>('all');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [lineaToDelete, setLineaToDelete] = useState<LineaBus | null>(null);
 
   const filteredLineas = lineasBuses.filter(linea => {
     const matchesSearch = linea.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -44,6 +59,95 @@ export function LineasBuses() {
   const handleNew = () => {
     setSelectedLineaBus(null);
     setDialogOpen(true);
+  };
+
+  const handleToggleActivo = async (linea: LineaBus) => {
+    try {
+      await updateLineaBus(linea.id, { activo: !linea.activo });
+      toast({
+        title: "Éxito",
+        description: `Línea ${linea.activo ? 'desactivada' : 'activada'} correctamente`
+      });
+      refetch();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el estado de la línea",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteClick = (linea: LineaBus) => {
+    setLineaToDelete(linea);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!lineaToDelete) return;
+    
+    try {
+      // Check if there are any dependencies
+      const { data: vehiculos } = await supabase
+        .from('vehiculos')
+        .select('id')
+        .eq('ruta_id', lineaToDelete.id)
+        .limit(1);
+      
+      const { data: usuarios } = await supabase
+        .from('usuarios')
+        .select('id')
+        .eq('linea_id', lineaToDelete.id)
+        .limit(1);
+
+      if (vehiculos && vehiculos.length > 0) {
+        toast({
+          title: "No se puede eliminar",
+          description: "Esta línea tiene vehículos asignados. Reasígnalos o elimínalos primero.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (usuarios && usuarios.length > 0) {
+        toast({
+          title: "No se puede eliminar",
+          description: "Esta línea tiene usuarios asignados. Reasígnalos primero.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Delete route geometry first
+      await supabase
+        .from('rutas_geometria')
+        .delete()
+        .eq('ruta_id', lineaToDelete.id);
+
+      // Delete the line
+      const { error } = await supabase
+        .from('rutas')
+        .delete()
+        .eq('id', lineaToDelete.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Éxito",
+        description: "Línea eliminada correctamente"
+      });
+      
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo eliminar la línea",
+        variant: "destructive"
+      });
+    } finally {
+      setDeleteDialogOpen(false);
+      setLineaToDelete(null);
+    }
   };
 
   return (
@@ -233,15 +337,33 @@ export function LineasBuses() {
                   )}
                 </div>
 
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handleEdit(linea)}
-                  className="w-full"
-                >
-                  <Edit className="h-4 w-4 mr-1" />
-                  Editar Línea
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleEdit(linea)}
+                    className="flex-1"
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    Editar
+                  </Button>
+                  <Button
+                    variant={linea.activo ? "secondary" : "default"}
+                    size="sm"
+                    onClick={() => handleToggleActivo(linea)}
+                    title={linea.activo ? "Desactivar línea" : "Activar línea"}
+                  >
+                    {linea.activo ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDeleteClick(linea)}
+                    title="Eliminar línea"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))
@@ -253,6 +375,25 @@ export function LineasBuses() {
         onOpenChange={setDialogOpen}
         lineaBus={selectedLineaBus}
       />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción eliminará permanentemente la línea <strong>{lineaToDelete?.codigo} - {lineaToDelete?.nombre}</strong> y su trayecto.
+              <br /><br />
+              Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive hover:bg-destructive/90">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
