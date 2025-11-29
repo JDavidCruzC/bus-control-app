@@ -44,6 +44,7 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
     codigo_usuario: "",
     placa: "",
     ruta_id: "",
+    linea_id: "",
   });
 
   useEffect(() => {
@@ -64,6 +65,7 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
         codigo_usuario: usuario.codigo_usuario || "",
         placa: usuario.placa || "",
         ruta_id: usuario.ruta_id || "",
+        linea_id: usuario.linea_id || "",
       });
     } else {
       setFormData({
@@ -77,6 +79,7 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
         codigo_usuario: "",
         placa: "",
         ruta_id: "",
+        linea_id: "",
       });
     }
   }, [usuario, open]);
@@ -145,6 +148,7 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
             telefono: formData.telefono,
             cedula: formData.cedula,
             rol_id: formData.rol_id,
+            linea_id: formData.linea_id || null,
             // Si es conductor/cobrador, limpiar codigo_usuario. Si es admin/gerente, guardar el código
             codigo_usuario: esConductorOCobrador ? null : formData.codigo_usuario,
           })
@@ -232,6 +236,7 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
             empresa_id: userData?.empresa_id,
             activo: true,
             codigo_usuario: formData.codigo_usuario,
+            linea_id: formData.linea_id || null,
           });
 
         if (dbError) throw dbError;
@@ -396,8 +401,8 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
                       </p>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="ruta">Línea de Bus Asignada</Label>
-                      <Select value={formData.ruta_id} onValueChange={(value) => setFormData({ ...formData, ruta_id: value })}>
+                      <Label htmlFor="linea">Línea de Bus Asignada *</Label>
+                      <Select value={formData.linea_id} onValueChange={(value) => setFormData({ ...formData, linea_id: value, ruta_id: value })}>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecciona una línea" />
                         </SelectTrigger>
@@ -405,29 +410,50 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
                           <SelectItem value="">Sin asignar</SelectItem>
                           {rutas.map((ruta) => (
                             <SelectItem key={ruta.id} value={ruta.id}>
-                              {ruta.codigo} - {ruta.nombre}
+                              Línea {ruta.codigo} - {ruta.nombre}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                       <p className="text-xs text-muted-foreground">
-                        Asigna la línea de bus que operará este conductor
+                        La línea de bus es obligatoria para conductores y cobradores
                       </p>
                     </div>
                   </>
                 );
               } else if (['administrador', 'gerente'].includes(selectedRole.nombre)) {
                 return (
-                  <div className="space-y-2">
-                    <Label htmlFor="codigo_usuario">Código de Usuario *</Label>
-                    <Input
-                      id="codigo_usuario"
-                      value={formData.codigo_usuario}
-                      onChange={(e) => setFormData({ ...formData, codigo_usuario: e.target.value.toUpperCase() })}
-                      placeholder="Ej: ADM001"
-                      required
-                    />
-                  </div>
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="codigo_usuario">Código de Usuario *</Label>
+                      <Input
+                        id="codigo_usuario"
+                        value={formData.codigo_usuario}
+                        onChange={(e) => setFormData({ ...formData, codigo_usuario: e.target.value.toUpperCase() })}
+                        placeholder="Ej: ADM001"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="linea_admin">Línea de Bus Asignada (Opcional)</Label>
+                      <Select value={formData.linea_id} onValueChange={(value) => setFormData({ ...formData, linea_id: value })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona una línea" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">Sin asignar</SelectItem>
+                          {rutas.map((ruta) => (
+                            <SelectItem key={ruta.id} value={ruta.id}>
+                              Línea {ruta.codigo} - {ruta.nombre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">
+                        Los administradores pueden opcionalmente pertenecer a una línea específica
+                      </p>
+                    </div>
+                  </>
                 );
               }
             }
