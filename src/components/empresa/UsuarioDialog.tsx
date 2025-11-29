@@ -135,18 +135,38 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
         // Si es conductor o cobrador, actualizar la placa
         const selectedRole = roles.find(r => r.id === formData.rol_id);
         if (selectedRole && ['conductor', 'cobrador'].includes(selectedRole.nombre)) {
-          const { error: conductorError } = await supabase
+          // Verificar si ya existe un registro en conductores
+          const { data: existingConductor } = await supabase
             .from('conductores')
-            .upsert({
-              usuario_id: usuario.id,
-              placa: formData.placa,
-              licencia_numero: formData.placa, // Usar placa como licencia temporalmente
-              activo: true,
-            }, {
-              onConflict: 'usuario_id'
-            });
+            .select('id')
+            .eq('usuario_id', usuario.id)
+            .single();
 
-          if (conductorError) throw conductorError;
+          if (existingConductor) {
+            // Actualizar registro existente
+            const { error: conductorError } = await supabase
+              .from('conductores')
+              .update({
+                placa: formData.placa,
+                licencia_numero: formData.placa,
+                activo: true,
+              })
+              .eq('usuario_id', usuario.id);
+
+            if (conductorError) throw conductorError;
+          } else {
+            // Crear nuevo registro
+            const { error: conductorError } = await supabase
+              .from('conductores')
+              .insert({
+                usuario_id: usuario.id,
+                placa: formData.placa,
+                licencia_numero: formData.placa,
+                activo: true,
+              });
+
+            if (conductorError) throw conductorError;
+          }
         }
 
         toast.success("Usuario actualizado exitosamente");
@@ -164,7 +184,7 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
         });
 
         if (authError) throw authError;
-        if (!authData.user) throw new Error("No se pudo crear el usuario");
+        if (!authData.user) throw new Error("No se pudo crear el usuario en el sistema de autenticación");
 
         // Create user in usuarios table
         const { error: dbError } = await supabase
@@ -205,8 +225,21 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
       onOpenChange(false);
       window.location.reload(); // Reload to show new user
     } catch (error: any) {
-      console.error('Error:', error);
-      toast.error(error.message || "Error al guardar usuario");
+      console.error('Error al guardar usuario:', error);
+      // Traducir mensajes de error comunes de Supabase/PostgreSQL
+      let errorMessage = "Error al guardar usuario";
+      if (error.message) {
+        if (error.message.includes('duplicate key') || error.message.includes('unique constraint')) {
+          errorMessage = "Ya existe un usuario con ese correo o código";
+        } else if (error.message.includes('violates foreign key')) {
+          errorMessage = "Error de referencia en la base de datos";
+        } else if (error.message.includes('not-null constraint')) {
+          errorMessage = "Faltan campos obligatorios";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
