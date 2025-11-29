@@ -10,6 +10,7 @@ export type Usuario = {
   telefono?: string;
   cedula?: string;
   codigo_usuario?: string;
+  placa?: string; // Placa del conductor/cobrador
   activo: boolean;
   empresa_id?: string;
   rol_id?: string;
@@ -91,7 +92,8 @@ export function useUsuarios() {
         .select(`
           *,
           rol:roles(*),
-          empresa:empresas(nombre)
+          empresa:empresas(nombre),
+          conductor:conductores(placa)
         `)
         .eq('empresa_id', currentUser.empresa_id)
         .order('created_at', { ascending: false });
@@ -148,7 +150,10 @@ export function useUsuarios() {
         })
         .map(usuario => ({
           ...usuario,
-          email_confirmed: emailConfirmationMap.get(usuario.id) ?? false
+          email_confirmed: emailConfirmationMap.get(usuario.id) ?? false,
+          placa: Array.isArray(usuario.conductor) && usuario.conductor.length > 0 
+            ? usuario.conductor[0].placa 
+            : undefined
         }));
 
       console.log('Usuarios después de filtrar:', filteredData.length);
