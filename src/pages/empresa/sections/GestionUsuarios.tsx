@@ -110,7 +110,7 @@ export function GestionUsuarios() {
         });
       }
     } catch (error: any) {
-      console.error('Error al confirmar email:', error);
+      console.error('Error al obtener confirmación de email:', error);
       toast({
         title: "Error",
         description: error.message || "No se pudo confirmar el email",
