@@ -64,7 +64,7 @@ export default function SuperAdminAuth() {
               <Input
                 id="email"
                 type="email"
-                placeholder="superadmin@sistema.com"
+                placeholder="tucorreo@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

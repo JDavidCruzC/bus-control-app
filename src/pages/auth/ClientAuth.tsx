@@ -152,7 +152,7 @@ const ClientAuth = () => {
                     <Input
                       id="login-email"
                       type="email"
-                      placeholder="tu@email.com"
+                      placeholder="tucorreo@email.com"
                       value={loginData.email}
                       onChange={(e) => setLoginData({...loginData, email: e.target.value})}
                       required
@@ -203,7 +203,7 @@ const ClientAuth = () => {
                     <Input
                       id="register-email"
                       type="email"
-                      placeholder="tu@email.com"
+                      placeholder="tucorreo@email.com"
                       value={registerData.email}
                       onChange={(e) => setRegisterData({...registerData, email: e.target.value})}
                       required
