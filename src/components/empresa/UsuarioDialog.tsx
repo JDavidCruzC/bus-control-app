@@ -32,6 +32,7 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
   const { userData } = useAuth();
   const [loading, setLoading] = useState(false);
   const [roles, setRoles] = useState<any[]>([]);
+  const [rutas, setRutas] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     nombre: "",
     apellido: "",
@@ -42,10 +43,12 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
     password: "",
     codigo_usuario: "",
     placa: "",
+    ruta_id: "",
   });
 
   useEffect(() => {
     fetchRoles();
+    fetchRutas();
   }, []);
 
   useEffect(() => {
@@ -60,6 +63,7 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
         password: "",
         codigo_usuario: usuario.codigo_usuario || "",
         placa: usuario.placa || "",
+        ruta_id: usuario.ruta_id || "",
       });
     } else {
       setFormData({
@@ -72,6 +76,7 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
         password: "",
         codigo_usuario: "",
         placa: "",
+        ruta_id: "",
       });
     }
   }, [usuario, open]);
@@ -84,6 +89,16 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
       .order('nombre');
     
     if (data) setRoles(data);
+  };
+
+  const fetchRutas = async () => {
+    const { data } = await supabase
+      .from('rutas')
+      .select('id, nombre, codigo')
+      .eq('activo', true)
+      .order('codigo');
+    
+    if (data) setRutas(data);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -153,6 +168,7 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
               .update({
                 placa: formData.placa,
                 licencia_numero: formData.placa,
+                ruta_id: formData.ruta_id || null,
                 activo: true,
               })
               .eq('usuario_id', usuario.id);
@@ -166,6 +182,7 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
                 usuario_id: usuario.id,
                 placa: formData.placa,
                 licencia_numero: formData.placa,
+                ruta_id: formData.ruta_id || null,
                 activo: true,
               });
 
@@ -227,7 +244,8 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
             .insert({
               usuario_id: authData.user.id,
               placa: formData.placa,
-              licencia_numero: formData.placa, // Usar placa como licencia temporalmente
+              licencia_numero: formData.placa,
+              ruta_id: formData.ruta_id || null,
               activo: true,
             });
 
@@ -363,19 +381,40 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
             if (selectedRole) {
               if (['conductor', 'cobrador'].includes(selectedRole.nombre)) {
                 return (
-                  <div className="space-y-2">
-                    <Label htmlFor="placa">Placa *</Label>
-                    <Input
-                      id="placa"
-                      value={formData.placa}
-                      onChange={(e) => setFormData({ ...formData, placa: e.target.value.toUpperCase() })}
-                      placeholder="Ej: ABC-1234"
-                      required
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      La placa será usada como código de acceso
-                    </p>
-                  </div>
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="placa">Placa *</Label>
+                      <Input
+                        id="placa"
+                        value={formData.placa}
+                        onChange={(e) => setFormData({ ...formData, placa: e.target.value.toUpperCase() })}
+                        placeholder="Ej: ABC-1234"
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        La placa será usada como código de acceso
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="ruta">Línea de Bus Asignada</Label>
+                      <Select value={formData.ruta_id} onValueChange={(value) => setFormData({ ...formData, ruta_id: value })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona una línea" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">Sin asignar</SelectItem>
+                          {rutas.map((ruta) => (
+                            <SelectItem key={ruta.id} value={ruta.id}>
+                              {ruta.codigo} - {ruta.nombre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">
+                        Asigna la línea de bus que operará este conductor
+                      </p>
+                    </div>
+                  </>
                 );
               } else if (['administrador', 'gerente'].includes(selectedRole.nombre)) {
                 return (

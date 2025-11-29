@@ -328,6 +328,11 @@ export function GestionUsuarios() {
                         return usuario.codigo_usuario || "N/A";
                       })()}
                     </Badge>
+                    {usuario.ruta && (
+                      <Badge variant="secondary" className="mt-1 text-xs block w-fit">
+                        {usuario.ruta.codigo} - {usuario.ruta.nombre}
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Badge className={getRoleColor(usuario.rol?.nombre)}>

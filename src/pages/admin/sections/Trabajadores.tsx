@@ -288,11 +288,16 @@ export function Trabajadores() {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">
-                      {usuario.rol?.nombre || 'Sin rol'}
-                    </Badge>
-                  </TableCell>
+                   <TableCell>
+                     <Badge variant="secondary">
+                       {usuario.rol?.nombre || 'Sin rol'}
+                     </Badge>
+                     {usuario.ruta && (
+                       <Badge variant="outline" className="mt-1 text-xs block w-fit">
+                         {usuario.ruta.codigo} - {usuario.ruta.nombre}
+                       </Badge>
+                     )}
+                   </TableCell>
                   <TableCell>
                     {canViewPII ? (
                       <div className="space-y-1">

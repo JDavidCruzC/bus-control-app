@@ -10,7 +10,8 @@ export type Usuario = {
   telefono?: string;
   cedula?: string;
   codigo_usuario?: string;
-  placa?: string; // Placa del conductor/cobrador
+  placa?: string;
+  ruta_id?: string;
   activo: boolean;
   empresa_id?: string;
   rol_id?: string;
@@ -24,6 +25,10 @@ export type Usuario = {
   };
   empresa?: {
     nombre: string;
+  };
+  ruta?: {
+    nombre: string;
+    codigo: string;
   };
 };
 
@@ -93,7 +98,7 @@ export function useUsuarios() {
           *,
           rol:roles(*),
           empresa:empresas(nombre),
-          conductor:conductores(placa)
+          conductor:conductores(placa, ruta_id, ruta:rutas(nombre, codigo))
         `)
         .eq('empresa_id', currentUser.empresa_id)
         .order('created_at', { ascending: false });
@@ -153,6 +158,12 @@ export function useUsuarios() {
           email_confirmed: emailConfirmationMap.get(usuario.id) ?? false,
           placa: Array.isArray(usuario.conductor) && usuario.conductor.length > 0 
             ? usuario.conductor[0].placa 
+            : undefined,
+          ruta_id: Array.isArray(usuario.conductor) && usuario.conductor.length > 0 
+            ? usuario.conductor[0].ruta_id 
+            : undefined,
+          ruta: Array.isArray(usuario.conductor) && usuario.conductor.length > 0 && usuario.conductor[0].ruta
+            ? usuario.conductor[0].ruta 
             : undefined
         }));
 
