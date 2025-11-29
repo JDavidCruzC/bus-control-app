@@ -1592,6 +1592,7 @@ export type Database = {
         Args: { email_param: string; user_id_param: string }
         Returns: undefined
       }
+      setup_super_admin: { Args: never; Returns: undefined }
       st_3dclosestpoint: {
         Args: { geom1: unknown; geom2: unknown }
         Returns: unknown

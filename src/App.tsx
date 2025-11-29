@@ -13,6 +13,7 @@ import PublicIndex from "./pages/public/PublicIndex";
 import AdminIndex from "./pages/admin/AdminIndex";
 import ConductorIndex from "./pages/conductor/ConductorIndex";
 import SuperAdminIndex from "./pages/superadmin/SuperAdminIndex";
+import SuperAdminAuth from "./pages/auth/SuperAdminAuth";
 import EmpresaAuth from "./pages/empresa/EmpresaAuth";
 import EmpresaIndex from "./pages/empresa/EmpresaIndex";
 import PublicRoutes from "./pages/PublicRoutes";
@@ -35,6 +36,7 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/auth/trabajadores" element={<WorkerLogin />} />
                 <Route path="/auth/clientes" element={<ClientAuth />} />
+                <Route path="/auth/superadmin" element={<SuperAdminAuth />} />
                 <Route path="/publico/*" element={<PublicIndex />} />
                 <Route path="/admin/*" element={<AdminIndex />} />
                 <Route path="/superadmin/*" element={<SuperAdminIndex />} />

@@ -67,7 +67,21 @@ export const codigoUsuarioLoginSchema = z.object({
   password: z.string().min(1, { message: 'La contraseña es requerida' }),
 });
 
+// Empresa login schema
+export const empresaLoginSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(1, { message: 'La contraseña es requerida' }),
+});
+
+// Super Admin login schema
+export const superAdminLoginSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(1, { message: 'La contraseña es requerida' }),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegistrationInput = z.infer<typeof registrationSchema>;
 export type ConductorLoginInput = z.infer<typeof conductorLoginSchema>;
 export type CodigoUsuarioLoginInput = z.infer<typeof codigoUsuarioLoginSchema>;
+export type EmpresaLoginInput = z.infer<typeof empresaLoginSchema>;
+export type SuperAdminLoginInput = z.infer<typeof superAdminLoginSchema>;
