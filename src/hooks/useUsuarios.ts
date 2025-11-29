@@ -41,6 +41,7 @@ export function useUsuarios() {
           description: "No se pudo autenticar el usuario",
           variant: "destructive"
         });
+        setLoading(false);
         return;
       }
 
@@ -51,42 +52,62 @@ export function useUsuarios() {
         .single();
 
       if (userError || !currentUser) {
+        console.error('Error obteniendo usuario actual:', userError);
         toast({
           title: "Error",
           description: "No se pudo obtener la información del usuario",
           variant: "destructive"
         });
+        setLoading(false);
         return;
       }
+
+      console.log('Usuario actual:', currentUser);
 
       // Si no es super_admin, debe tener empresa_id
-      if (!currentUser.empresa_id && currentUser.rol?.nombre !== 'super_admin') {
-        toast({
-          title: "Error",
-          description: "Usuario sin empresa asignada",
-          variant: "destructive"
-        });
+      if (!currentUser.empresa_id) {
+        if (currentUser.rol?.nombre === 'super_admin') {
+          toast({
+            title: "Acceso Restringido",
+            description: "Los super administradores no pueden acceder a esta sección",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: "Usuario sin empresa asignada",
+            variant: "destructive"
+          });
+        }
+        setLoading(false);
         return;
       }
 
-      // Obtener usuarios de la misma empresa (excluir super_admin en el query)
+      console.log('Filtrando por empresa_id:', currentUser.empresa_id);
+
+      // Obtener usuarios de la misma empresa únicamente
       const { data, error } = await supabase
         .from('usuarios')
         .select(`
           *,
-          rol:roles(*)
+          rol:roles(*),
+          empresa:empresas(nombre)
         `)
         .eq('empresa_id', currentUser.empresa_id)
         .order('created_at', { ascending: false });
 
       if (error) {
+        console.error('Error cargando usuarios:', error);
         toast({
           title: "Error",
           description: "No se pudieron cargar los usuarios de la empresa",
           variant: "destructive"
         });
+        setLoading(false);
         return;
       }
+
+      console.log('Usuarios obtenidos de la base de datos:', data?.length, 'usuarios');
 
       // Obtener información de confirmación de email desde auth.users usando RPC
       // Creamos un mapa simple para verificar si los emails están confirmados
@@ -101,14 +122,24 @@ export function useUsuarios() {
         }
       }
 
-      // Filtrar usuarios que no sean super_admin y agregar estado de confirmación
+      // Filtrar usuarios que no sean super_admin manualmente por seguridad adicional
       const filteredData: Usuario[] = (data || [])
-        .filter(usuario => usuario.rol?.nombre !== 'super_admin')
+        .filter(usuario => {
+          const isSuperAdmin = usuario.rol?.nombre === 'super_admin';
+          const sameCompany = usuario.empresa_id === currentUser.empresa_id;
+          
+          if (isSuperAdmin) {
+            console.log(`Filtrando super_admin: ${usuario.nombre}`);
+          }
+          
+          return !isSuperAdmin && sameCompany;
+        })
         .map(usuario => ({
           ...usuario,
           email_confirmed: emailConfirmationMap.get(usuario.id) ?? false
         }));
 
+      console.log('Usuarios después de filtrar:', filteredData.length);
       setUsuarios(filteredData);
     } catch (error: any) {
       console.error('Error al cargar usuarios:', error);
@@ -130,7 +161,8 @@ export function useUsuarios() {
         .eq('id', id)
         .select(`
           *,
-          rol:roles(*)
+          rol:roles(*),
+          empresa:empresas(nombre)
         `)
         .single();
 
