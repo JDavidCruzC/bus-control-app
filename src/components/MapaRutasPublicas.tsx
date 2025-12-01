@@ -30,11 +30,24 @@ export function MapaRutasPublicas({
   useEffect(() => {
     const fetchToken = async () => {
       try {
+        console.log('Fetching Mapbox token...');
         const { data, error } = await supabase.functions.invoke('get-mapbox-token');
-        if (error) throw error;
+        console.log('Mapbox token response:', { data, error });
+        
+        if (error) {
+          console.error('Error al obtener token de Mapbox:', error);
+          throw error;
+        }
+        
+        if (!data?.token) {
+          console.error('No se recibió token de Mapbox');
+          throw new Error('Token de Mapbox no disponible');
+        }
+        
+        console.log('Token de Mapbox obtenido correctamente');
         setMapToken(data.token);
       } catch (error) {
-        console.error('Error fetching Mapbox token:', error);
+        console.error('Error crítico obteniendo token de Mapbox:', error);
       } finally {
         setLoading(false);
       }
@@ -46,18 +59,29 @@ export function MapaRutasPublicas({
   useEffect(() => {
     if (!mapContainer.current || !mapToken || map.current) return;
 
+    console.log('Inicializando mapa con token:', mapToken.substring(0, 20) + '...');
     mapboxgl.accessToken = mapToken;
 
     const defaultLat = parseFloat(getConfigValue?.('map_default_lat') || '-17.6396');
     const defaultLng = parseFloat(getConfigValue?.('map_default_lng') || '-71.3378');
     const defaultZoom = parseInt(getConfigValue?.('map_default_zoom') || '13');
 
+    console.log('Configuración del mapa:', { defaultLat, defaultLng, defaultZoom });
+
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
+      style: 'mapbox://styles/mapbox/streets-v12',
       center: [defaultLng, defaultLat],
       zoom: defaultZoom,
       attributionControl: false,
+    });
+
+    map.current.on('error', (e) => {
+      console.error('Error del mapa de Mapbox:', e);
+    });
+
+    map.current.on('styledata', () => {
+      console.log('Estilo del mapa cargado');
     });
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
