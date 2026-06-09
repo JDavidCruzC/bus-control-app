@@ -389,17 +389,15 @@ export function MapaRutasPublicas({
     });
   };
 
-  if (loading) {
-    return (
-      <div className="flex h-full w-full items-center justify-center rounded-lg bg-muted">
-        <p className="text-muted-foreground">Cargando mapa...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="relative h-full w-full overflow-hidden rounded-lg bg-muted">
       <div ref={mapContainer} className="h-full min-h-[420px] w-full" />
+
+      {loading && (
+        <div className="absolute inset-0 z-[950] flex items-center justify-center bg-muted">
+          <p className="text-muted-foreground">Cargando mapa...</p>
+        </div>
+      )}
 
       {mapError && (
         <div className="absolute left-1/2 top-4 z-[1000] w-[min(92%,460px)] -translate-x-1/2 rounded-lg border border-destructive bg-background/95 p-3 text-center shadow-xl backdrop-blur">
