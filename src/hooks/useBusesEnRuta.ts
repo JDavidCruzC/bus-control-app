@@ -16,6 +16,9 @@ export type BusEnRuta = {
   activo: boolean;
   empresaId: string;
   empresaNombre?: string;
+  color?: string;
+  modelo?: string;
+  marca?: string;
 };
 
 /**
@@ -55,6 +58,19 @@ export function useBusesEnRuta(empresaId?: string) {
       // Guardar geometrías en cache
       setRutasGeomCache(rutasGeom || []);
 
+      // Cargar vehículos reales para tomar color/modelo/marca/placa por ruta
+      const { data: vehiculosData } = await supabase
+        .from('vehiculos')
+        .select('id, placa, modelo, marca, color, ruta_id')
+        .eq('activo', true);
+      const vehiculosPorRuta = new Map<string, any[]>();
+      (vehiculosData || []).forEach((v: any) => {
+        if (!v.ruta_id) return;
+        const arr = vehiculosPorRuta.get(v.ruta_id) || [];
+        arr.push(v);
+        vehiculosPorRuta.set(v.ruta_id, arr);
+      });
+
       const nuevosBuses: BusEnRuta[] = [];
 
       for (const rutaGeom of rutasGeom || []) {
@@ -74,15 +90,18 @@ export function useBusesEnRuta(empresaId?: string) {
         // Crear 6-8 buses por ruta para simular tráfico realista
         const numBuses = Math.floor(Math.random() * 3) + 6; // 6, 7 u 8 buses
         
+        const vehiculosRuta = vehiculosPorRuta.get(rutaGeom.ruta_id) || [];
+
         for (let i = 0; i < numBuses; i++) {
           const progresoInicial = (i * (100 / numBuses)) % 100; // Distribuir buses uniformemente
           const posicionEnRuta = Math.floor((coordinates.length - 1) * (progresoInicial / 100));
           const coord = coordinates[posicionEnRuta];
+          const v = vehiculosRuta[i % (vehiculosRuta.length || 1)];
 
           nuevosBuses.push({
             id: `sim_${rutaGeom.ruta_id}_${i}`,
             nombre: `Bus ${rutaGeom.ruta.codigo}-${i + 1}`,
-            placa: `${rutaGeom.ruta.codigo}${String(i + 1).padStart(2, '0')}`,
+            placa: v?.placa || `${rutaGeom.ruta.codigo}${String(i + 1).padStart(2, '0')}`,
             latitud: coord[1],
             longitud: coord[0],
             velocidad: 30 + Math.random() * 20, // 30-50 km/h
@@ -92,7 +111,10 @@ export function useBusesEnRuta(empresaId?: string) {
             rutaNombre: rutaGeom.ruta.nombre,
             activo: true,
             empresaId: rutaGeom.ruta.empresa_id || '',
-            empresaNombre: rutaGeom.ruta.empresa?.nombre
+            empresaNombre: rutaGeom.ruta.empresa?.nombre,
+            color: v?.color,
+            modelo: v?.modelo,
+            marca: v?.marca,
           });
         }
       }
