@@ -22,9 +22,19 @@ export function MapaRutasPublicas({
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapToken, setMapToken] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [mapError, setMapError] = useState<string | null>(null);
+  const [currentStyle, setCurrentStyle] = useState<string>('streets-v12');
   const { getConfigValue } = useConfiguraciones();
   const { buses } = useBusesEnRuta(empresaId);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+
+  const MAP_STYLES = [
+    { id: 'streets-v12', label: 'Estándar', icon: '🗺️' },
+    { id: 'satellite-streets-v12', label: 'Satélite', icon: '🛰️' },
+    { id: 'outdoors-v12', label: 'Relieve', icon: '⛰️' },
+    { id: 'navigation-night-v1', label: 'Nocturno', icon: '🌙' },
+    { id: 'light-v11', label: 'Claro', icon: '☀️' },
+  ];
 
   // Fetch Mapbox token
   useEffect(() => {
@@ -66,30 +76,47 @@ export function MapaRutasPublicas({
     const defaultLng = parseFloat(getConfigValue?.('map_default_lng') || '-71.3378');
     const defaultZoom = parseInt(getConfigValue?.('map_default_zoom') || '13');
 
-    console.log('Configuración del mapa:', { defaultLat, defaultLng, defaultZoom });
-
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
+      style: `mapbox://styles/mapbox/${currentStyle}`,
       center: [defaultLng, defaultLat],
       zoom: defaultZoom,
       attributionControl: false,
+      pitchWithRotate: true,
     });
 
-    map.current.on('error', (e) => {
-      console.error('Error del mapa de Mapbox:', e);
+    map.current.on('error', (e: any) => {
+      console.error('Error del mapa de Mapbox:', e?.error?.message || e);
+      const msg = e?.error?.message || '';
+      if (msg.toLowerCase().includes('401') || msg.toLowerCase().includes('unauthorized') || msg.toLowerCase().includes('access token')) {
+        setMapError('Token de Mapbox inválido o restringido. Verifique en Ajustes → API.');
+      } else if (msg) {
+        setMapError(msg);
+      }
     });
 
-    map.current.on('styledata', () => {
-      console.log('Estilo del mapa cargado');
-    });
-
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    // Controles
+    map.current.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), 'top-right');
+    map.current.addControl(
+      new mapboxgl.GeolocateControl({
+        positionOptions: { enableHighAccuracy: true },
+        trackUserLocation: true,
+        showUserHeading: true,
+        showAccuracyCircle: true,
+      }),
+      'top-right'
+    );
+    map.current.addControl(new mapboxgl.ScaleControl({ maxWidth: 120, unit: 'metric' }), 'bottom-right');
+    map.current.addControl(new mapboxgl.FullscreenControl(), 'top-right');
+    map.current.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-left');
 
     map.current.on('load', () => {
-      if (map.current?.isStyleLoaded()) {
-        cargarRutasYParaderos();
-      }
+      cargarRutasYParaderos();
+    });
+
+    map.current.on('style.load', () => {
+      // Re-cargar capas cuando cambia el estilo
+      cargarRutasYParaderos();
     });
 
     return () => {
@@ -101,6 +128,12 @@ export function MapaRutasPublicas({
       }
     };
   }, [mapToken]);
+
+  // Cambiar estilo del mapa
+  useEffect(() => {
+    if (!map.current || !mapToken) return;
+    map.current.setStyle(`mapbox://styles/mapbox/${currentStyle}`);
+  }, [currentStyle]);
 
   // Cargar rutas y paraderos
   const cargarRutasYParaderos = async () => {
@@ -358,10 +391,38 @@ export function MapaRutasPublicas({
   return (
     <div className="relative w-full h-full">
       <div ref={mapContainer} className="w-full h-full rounded-lg" />
-      
+
+      {mapError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur rounded-lg z-10 p-4">
+          <div className="bg-card border border-destructive rounded-lg p-4 max-w-md text-center shadow-xl">
+            <p className="text-destructive font-semibold mb-2">⚠️ Error al cargar el mapa</p>
+            <p className="text-sm text-muted-foreground">{mapError}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Selector de tipo de vista (estilo Google Maps) */}
+      <div className="absolute top-4 left-4 bg-background/95 backdrop-blur border border-border rounded-lg shadow-lg p-1 flex flex-col gap-1 z-10">
+        {MAP_STYLES.map((s) => (
+          <button
+            key={s.id}
+            onClick={() => setCurrentStyle(s.id)}
+            title={s.label}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+              currentStyle === s.id
+                ? 'bg-primary text-primary-foreground'
+                : 'hover:bg-muted text-foreground'
+            }`}
+          >
+            <span>{s.icon}</span>
+            <span className="hidden sm:inline">{s.label}</span>
+          </button>
+        ))}
+      </div>
+
       {/* Indicador en vivo */}
       {mostrarBuses && buses.length > 0 && (
-        <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full shadow-lg flex items-center gap-2 text-sm font-semibold">
+        <div className="absolute top-4 right-16 bg-green-500 text-white px-3 py-1 rounded-full shadow-lg flex items-center gap-2 text-sm font-semibold z-10">
           <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
           EN VIVO
         </div>
