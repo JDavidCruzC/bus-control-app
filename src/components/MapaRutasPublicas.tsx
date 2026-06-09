@@ -76,30 +76,47 @@ export function MapaRutasPublicas({
     const defaultLng = parseFloat(getConfigValue?.('map_default_lng') || '-71.3378');
     const defaultZoom = parseInt(getConfigValue?.('map_default_zoom') || '13');
 
-    console.log('Configuración del mapa:', { defaultLat, defaultLng, defaultZoom });
-
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
+      style: `mapbox://styles/mapbox/${currentStyle}`,
       center: [defaultLng, defaultLat],
       zoom: defaultZoom,
       attributionControl: false,
+      pitchWithRotate: true,
     });
 
-    map.current.on('error', (e) => {
-      console.error('Error del mapa de Mapbox:', e);
+    map.current.on('error', (e: any) => {
+      console.error('Error del mapa de Mapbox:', e?.error?.message || e);
+      const msg = e?.error?.message || '';
+      if (msg.toLowerCase().includes('401') || msg.toLowerCase().includes('unauthorized') || msg.toLowerCase().includes('access token')) {
+        setMapError('Token de Mapbox inválido o restringido. Verifique en Ajustes → API.');
+      } else if (msg) {
+        setMapError(msg);
+      }
     });
 
-    map.current.on('styledata', () => {
-      console.log('Estilo del mapa cargado');
-    });
-
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    // Controles
+    map.current.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), 'top-right');
+    map.current.addControl(
+      new mapboxgl.GeolocateControl({
+        positionOptions: { enableHighAccuracy: true },
+        trackUserLocation: true,
+        showUserHeading: true,
+        showAccuracyCircle: true,
+      }),
+      'top-right'
+    );
+    map.current.addControl(new mapboxgl.ScaleControl({ maxWidth: 120, unit: 'metric' }), 'bottom-right');
+    map.current.addControl(new mapboxgl.FullscreenControl(), 'top-right');
+    map.current.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-left');
 
     map.current.on('load', () => {
-      if (map.current?.isStyleLoaded()) {
-        cargarRutasYParaderos();
-      }
+      cargarRutasYParaderos();
+    });
+
+    map.current.on('style.load', () => {
+      // Re-cargar capas cuando cambia el estilo
+      cargarRutasYParaderos();
     });
 
     return () => {
@@ -111,6 +128,12 @@ export function MapaRutasPublicas({
       }
     };
   }, [mapToken]);
+
+  // Cambiar estilo del mapa
+  useEffect(() => {
+    if (!map.current || !mapToken) return;
+    map.current.setStyle(`mapbox://styles/mapbox/${currentStyle}`);
+  }, [currentStyle]);
 
   // Cargar rutas y paraderos
   const cargarRutasYParaderos = async () => {
