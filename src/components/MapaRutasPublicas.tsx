@@ -22,9 +22,19 @@ export function MapaRutasPublicas({
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapToken, setMapToken] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [mapError, setMapError] = useState<string | null>(null);
+  const [currentStyle, setCurrentStyle] = useState<string>('streets-v12');
   const { getConfigValue } = useConfiguraciones();
   const { buses } = useBusesEnRuta(empresaId);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+
+  const MAP_STYLES = [
+    { id: 'streets-v12', label: 'Estándar', icon: '🗺️' },
+    { id: 'satellite-streets-v12', label: 'Satélite', icon: '🛰️' },
+    { id: 'outdoors-v12', label: 'Relieve', icon: '⛰️' },
+    { id: 'navigation-night-v1', label: 'Nocturno', icon: '🌙' },
+    { id: 'light-v11', label: 'Claro', icon: '☀️' },
+  ];
 
   // Fetch Mapbox token
   useEffect(() => {
