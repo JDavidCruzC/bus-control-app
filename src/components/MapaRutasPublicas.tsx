@@ -59,6 +59,7 @@ const MAP_STYLES: Array<{
 ];
 
 const ROUTE_COLORS = ['#2563eb', '#dc2626', '#059669', '#d97706', '#7c3aed', '#db2777'];
+const INITIAL_STYLE = MAP_STYLES[0];
 
 const createDivIcon = (html: string, className = '') =>
   L.divIcon({
@@ -245,9 +246,9 @@ export function MapaRutasPublicas({
       attributionControl: true,
     });
 
-    baseLayer.current = L.tileLayer(selectedStyle.url, {
-      attribution: selectedStyle.attribution,
-      maxZoom: selectedStyle.id === 'relieve' ? 17 : 19,
+    baseLayer.current = L.tileLayer(INITIAL_STYLE.url, {
+      attribution: INITIAL_STYLE.attribution,
+      maxZoom: 19,
       crossOrigin: true,
     }).addTo(map.current);
 
@@ -269,7 +270,7 @@ export function MapaRutasPublicas({
       map.current = null;
       setIsMapReady(false);
     };
-  }, [getConfigValue, selectedStyle.attribution, selectedStyle.id, selectedStyle.url]);
+  }, [getConfigValue]);
 
   useEffect(() => {
     if (!map.current || !baseLayer.current) return;
