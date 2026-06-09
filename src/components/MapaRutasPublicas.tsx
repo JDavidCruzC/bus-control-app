@@ -305,15 +305,21 @@ export function MapaRutasPublicas({
     buses.forEach((bus: BusEnRuta) => {
       if (!Number.isFinite(bus.latitud) || !Number.isFinite(bus.longitud)) return;
       const latLng = L.latLng(bus.latitud, bus.longitud);
-      const popup = `<div style="min-width:210px"><strong>${escapeHtml(bus.nombre)}</strong><div style="margin-top:8px;font-size:13px;line-height:1.7"><div>Línea: <strong>${escapeHtml(bus.rutaCodigo)}</strong></div><div>Velocidad: <strong>${Math.round(bus.velocidad)} km/h</strong></div><div>Progreso: <strong>${Math.round(bus.progreso)}%</strong></div>${bus.placa ? `<div>Placa: <strong>${escapeHtml(bus.placa)}</strong></div>` : ''}</div><div style="margin-top:8px;padding-top:8px;border-top:1px solid #e5e7eb;color:#059669;font-size:12px;font-weight:700">● EN VIVO</div></div>`;
+      const busColor = resolveColor(bus.color);
+      const vehiculoInfo = [bus.marca, bus.modelo].filter(Boolean).join(' ');
+      const popup = `<div style="min-width:220px"><strong>${escapeHtml(bus.nombre)}</strong><div style="display:flex;align-items:center;gap:6px;margin-top:4px"><span style="display:inline-block;width:10px;height:10px;border-radius:999px;background:${busColor};border:1px solid #1f2937"></span><span style="font-size:12px;color:#6b7280">Color combi</span></div><div style="margin-top:8px;font-size:13px;line-height:1.7"><div>Línea: <strong>${escapeHtml(bus.rutaCodigo)}</strong></div><div>Velocidad: <strong>${Math.round(bus.velocidad)} km/h</strong></div><div>Progreso: <strong>${Math.round(bus.progreso)}%</strong></div>${vehiculoInfo ? `<div>Vehículo: <strong>${escapeHtml(vehiculoInfo)}</strong></div>` : ''}${bus.placa ? `<div>Placa: <strong>${escapeHtml(bus.placa)}</strong></div>` : ''}</div><div style="margin-top:8px;padding-top:8px;border-top:1px solid #e5e7eb;color:#059669;font-size:12px;font-weight:700">● EN VIVO</div></div>`;
+
+      const iconHtml = `<div style="position:relative;width:48px;height:34px;filter:drop-shadow(0 4px 6px rgba(0,0,0,.35))">${combiSvg(busColor)}<div style="position:absolute;right:-2px;top:-2px;width:10px;height:10px;border-radius:999px;background:#22c55e;border:1.5px solid white;box-shadow:0 0 0 2px rgba(34,197,94,.35)"></div></div>`;
+
       const existing = busMarkersRef.current.get(bus.id);
       if (existing) {
         existing.setLatLng(latLng);
         existing.setPopupContent(popup);
+        existing.setIcon(createDivIcon(iconHtml, '', [48, 34]));
         return;
       }
       const marker = L.marker(latLng, {
-        icon: createDivIcon(`<div style="position:relative;width:36px;height:36px"><div style="width:34px;height:34px;border-radius:999px;background:#16a34a;color:white;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 22px rgba(0,0,0,.35);border:2px solid white;font-size:18px">🚌</div><div style="position:absolute;right:0;top:0;width:10px;height:10px;border-radius:999px;background:#86efac;border:1px solid white"></div></div>`),
+        icon: createDivIcon(iconHtml, '', [48, 34]),
       }).bindPopup(popup);
       marker.addTo(busLayerGroup.current!);
       busMarkersRef.current.set(bus.id, marker);
