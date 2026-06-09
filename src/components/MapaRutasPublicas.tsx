@@ -69,14 +69,48 @@ const MAP_STYLES: Array<{
 
 const ROUTE_COLORS = ['#2563eb', '#dc2626', '#059669', '#d97706', '#7c3aed', '#db2777'];
 
-const createDivIcon = (html: string, className = '') =>
+const createDivIcon = (html: string, className = '', size: [number, number] = [36, 36]) =>
   L.divIcon({
     html,
     className,
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
-    popupAnchor: [0, -18],
+    iconSize: size,
+    iconAnchor: [size[0] / 2, size[1] / 2],
+    popupAnchor: [0, -size[1] / 2],
   });
+
+// Mapa de nombres de colores en español → hex
+const COLOR_MAP: Record<string, string> = {
+  rojo: '#dc2626', azul: '#2563eb', amarillo: '#facc15', verde: '#16a34a',
+  blanco: '#f8fafc', negro: '#1f2937', gris: '#6b7280', plomo: '#6b7280',
+  naranja: '#f97316', morado: '#7c3aed', celeste: '#0ea5e9', rosa: '#ec4899',
+  marron: '#92400e', marrón: '#92400e', dorado: '#d4af37', plata: '#9ca3af',
+};
+
+const resolveColor = (color?: string, fallback = '#facc15') => {
+  if (!color) return fallback;
+  const c = color.trim();
+  if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(c)) return c;
+  return COLOR_MAP[c.toLowerCase()] || fallback;
+};
+
+// Genera SVG de una combi/van vista de costado, coloreable
+const combiSvg = (color: string) => {
+  const stroke = '#1f2937';
+  return `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 40" width="44" height="28">
+  <g stroke="${stroke}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M4 28 L4 14 Q4 8 10 8 L40 8 L52 18 L58 18 Q60 18 60 20 L60 28 Z" fill="${color}"/>
+    <rect x="12" y="11" width="11" height="8" rx="1.5" fill="#d1ecf1"/>
+    <rect x="25" y="11" width="11" height="8" rx="1.5" fill="#d1ecf1"/>
+    <rect x="42" y="13" width="9" height="6" rx="1" fill="#d1ecf1"/>
+    <line x1="38" y1="20" x2="38" y2="28"/>
+    <circle cx="17" cy="30" r="5" fill="#e5e7eb"/>
+    <circle cx="17" cy="30" r="2" fill="${stroke}"/>
+    <circle cx="48" cy="30" r="5" fill="#e5e7eb"/>
+    <circle cx="48" cy="30" r="2" fill="${stroke}"/>
+  </g>
+</svg>`;
+};
 
 const escapeHtml = (value?: string | number | null) =>
   String(value ?? '')
@@ -271,15 +305,21 @@ export function MapaRutasPublicas({
     buses.forEach((bus: BusEnRuta) => {
       if (!Number.isFinite(bus.latitud) || !Number.isFinite(bus.longitud)) return;
       const latLng = L.latLng(bus.latitud, bus.longitud);
-      const popup = `<div style="min-width:210px"><strong>${escapeHtml(bus.nombre)}</strong><div style="margin-top:8px;font-size:13px;line-height:1.7"><div>Línea: <strong>${escapeHtml(bus.rutaCodigo)}</strong></div><div>Velocidad: <strong>${Math.round(bus.velocidad)} km/h</strong></div><div>Progreso: <strong>${Math.round(bus.progreso)}%</strong></div>${bus.placa ? `<div>Placa: <strong>${escapeHtml(bus.placa)}</strong></div>` : ''}</div><div style="margin-top:8px;padding-top:8px;border-top:1px solid #e5e7eb;color:#059669;font-size:12px;font-weight:700">● EN VIVO</div></div>`;
+      const busColor = resolveColor(bus.color);
+      const vehiculoInfo = [bus.marca, bus.modelo].filter(Boolean).join(' ');
+      const popup = `<div style="min-width:220px"><strong>${escapeHtml(bus.nombre)}</strong><div style="display:flex;align-items:center;gap:6px;margin-top:4px"><span style="display:inline-block;width:10px;height:10px;border-radius:999px;background:${busColor};border:1px solid #1f2937"></span><span style="font-size:12px;color:#6b7280">Color combi</span></div><div style="margin-top:8px;font-size:13px;line-height:1.7"><div>Línea: <strong>${escapeHtml(bus.rutaCodigo)}</strong></div><div>Velocidad: <strong>${Math.round(bus.velocidad)} km/h</strong></div><div>Progreso: <strong>${Math.round(bus.progreso)}%</strong></div>${vehiculoInfo ? `<div>Vehículo: <strong>${escapeHtml(vehiculoInfo)}</strong></div>` : ''}${bus.placa ? `<div>Placa: <strong>${escapeHtml(bus.placa)}</strong></div>` : ''}</div><div style="margin-top:8px;padding-top:8px;border-top:1px solid #e5e7eb;color:#059669;font-size:12px;font-weight:700">● EN VIVO</div></div>`;
+
+      const iconHtml = `<div style="position:relative;width:48px;height:34px;filter:drop-shadow(0 4px 6px rgba(0,0,0,.35))">${combiSvg(busColor)}<div style="position:absolute;right:-2px;top:-2px;width:10px;height:10px;border-radius:999px;background:#22c55e;border:1.5px solid white;box-shadow:0 0 0 2px rgba(34,197,94,.35)"></div></div>`;
+
       const existing = busMarkersRef.current.get(bus.id);
       if (existing) {
         existing.setLatLng(latLng);
         existing.setPopupContent(popup);
+        existing.setIcon(createDivIcon(iconHtml, '', [48, 34]));
         return;
       }
       const marker = L.marker(latLng, {
-        icon: createDivIcon(`<div style="position:relative;width:36px;height:36px"><div style="width:34px;height:34px;border-radius:999px;background:#16a34a;color:white;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 22px rgba(0,0,0,.35);border:2px solid white;font-size:18px">🚌</div><div style="position:absolute;right:0;top:0;width:10px;height:10px;border-radius:999px;background:#86efac;border:1px solid white"></div></div>`),
+        icon: createDivIcon(iconHtml, '', [48, 34]),
       }).bindPopup(popup);
       marker.addTo(busLayerGroup.current!);
       busMarkersRef.current.set(bus.id, marker);
