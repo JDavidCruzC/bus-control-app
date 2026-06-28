@@ -57,7 +57,7 @@ Bus Control App es una plataforma web multirol que permite a empresas de transpo
 ### 2.4 Backend / Base de datos
 | Categoría | Tecnología | Detalle |
 |-----------|-----------|---------|
-| BaaS | **Lovable Cloud (Supabase)** | PostgreSQL gestionado |
+| BaaS | **Supabase Cloud** | PostgreSQL gestionado |
 | Cliente | **@supabase/supabase-js** 2.57 | Auth + Data API + Realtime |
 | Base de datos | **PostgreSQL** | Tablas: `usuarios`, `empresas`, `rutas`, `rutas_geometria`, `paraderos`, `vehiculos`, `conductores`, `lineas_buses`, `pagos`, `membresias`, `configuraciones`, `audit_logs`, `desvios`, `roles`, `user_roles` |
 | Funciones SQL | RPC `get_usuario_email_by_codigo`, `get_conductor_email_by_placa`, `has_role` (SECURITY DEFINER) |
@@ -74,9 +74,9 @@ Bus Control App es una plataforma web multirol que permite a empresas de transpo
 | Bun / npm | gestor de paquetes |
 
 ### 2.6 Despliegue
-- **Lovable** (build y hosting estático del SPA)
+- **Vercel** (build y hosting estático del SPA)
 - **Supabase Cloud** (BD, Auth, Edge Functions)
-- URL publicada: `https://bus-control-app.lovable.app`
+- URL publicada: `https://bus-control-app.vercel.app`
 
 ---
 
@@ -142,7 +142,7 @@ La app es **TypeScript/JavaScript puro** (frontend React + Edge Functions Deno).
 |---------|---------------|------------|
 | 3.5.1 Introducción a automatización | – | ✅ Aplicable |
 | 3.5.2 CI | ❌ No configurado | ✅ Fácil con GitHub Actions |
-| 3.5.3 CD | ✅ (Lovable auto-deploy) | ✅ |
+| 3.5.3 CD | ✅ (Vercel auto-deploy) | ✅ |
 | 3.5.4 Pipelines | ❌ | ✅ Diseñable |
 | 3.5.5 GitHub Actions / GitLab CI / Jenkins | ❌ | ✅ GitHub Actions recomendado |
 | 3.5.6 Reportes automáticos | ❌ | ✅ HTML reporters de Playwright/Vitest |
@@ -166,7 +166,7 @@ La app es **TypeScript/JavaScript puro** (frontend React + Edge Functions Deno).
 
 **Brechas (oportunidades de mejora documentables como recomendaciones):**
 - ❌ No existen aún **tests unitarios ni E2E** en el repositorio (scripts `test` ausentes en `package.json`).
-- ❌ No hay **pipeline CI/CD propio** (depende del auto-deploy de Lovable).
+- ❌ No hay **pipeline CI/CD propio** (depende del deploy de Vercel).
 - ❌ No hay **reportes de cobertura ni métricas** de calidad.
 - ⚠️ **RLS desactivado** en BD → riesgo de seguridad que debe entrar en el plan de regresión.
 
