@@ -1,0 +1,16 @@
+services:
+  app:
+    build:
+      context: .
+
+    container_name: bus_control_app
+
+    ports:
+      - "5173:5173"
+
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+    stdin_open: true
+    tty: true
