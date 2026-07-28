@@ -1,10 +1,38 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+} from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/pages/admin/AdminSidebar";
+import { supabase } from "@/integrations/supabase/client";
+
+// --------------------
+// Mock matchMedia
+// --------------------
+
+Object.defineProperty(window, "matchMedia", {
+  writable: true,
+  value: vi.fn().mockImplementation((query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
+
+// --------------------
+// Mocks
+// --------------------
 
 const navigateMock = vi.fn();
-const signOutMock = vi.fn();
 const toastMock = vi.fn();
 
 vi.mock("react-router-dom", async () => {
@@ -28,93 +56,80 @@ vi.mock("@/hooks/use-toast", () => ({
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     auth: {
-      signOut: signOutMock,
+      signOut: vi.fn().mockResolvedValue({
+        error: null,
+      }),
     },
   },
 }));
 
-describe("AdminSidebar", () => {
+// --------------------
+// Helper
+// --------------------
 
+const renderComponent = () =>
+  render(
+    <MemoryRouter>
+      <SidebarProvider>
+        <AdminSidebar />
+      </SidebarProvider>
+    </MemoryRouter>
+  );
+
+// --------------------
+// Tests
+// --------------------
+
+describe("AdminSidebar", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("renderiza la sección Control", () => {
-
-    render(
-      <MemoryRouter>
-        <AdminSidebar />
-      </MemoryRouter>
-    );
+    renderComponent();
 
     expect(screen.getByText("Control")).toBeInTheDocument();
-
   });
 
   it("renderiza la sección Administración", () => {
-
-    render(
-      <MemoryRouter>
-        <AdminSidebar />
-      </MemoryRouter>
-    );
+    renderComponent();
 
     expect(screen.getByText("Administración")).toBeInTheDocument();
-
   });
 
   it("renderiza la opción Cerrar Sesión", () => {
-
-    render(
-      <MemoryRouter>
-        <AdminSidebar />
-      </MemoryRouter>
-    );
+    renderComponent();
 
     expect(screen.getByText("Cerrar Sesión")).toBeInTheDocument();
-
   });
 
   it("ejecuta signOut al cerrar sesión", async () => {
-
-    render(
-      <MemoryRouter>
-        <AdminSidebar />
-      </MemoryRouter>
-    );
+    renderComponent();
 
     fireEvent.click(screen.getByText("Cerrar Sesión"));
 
-    expect(signOutMock).toHaveBeenCalled();
-
+    await waitFor(() => {
+      expect(supabase.auth.signOut).toHaveBeenCalled();
+    });
   });
 
   it("redirige al inicio después del logout", async () => {
-
-    render(
-      <MemoryRouter>
-        <AdminSidebar />
-      </MemoryRouter>
-    );
+    renderComponent();
 
     fireEvent.click(screen.getByText("Cerrar Sesión"));
 
-    expect(navigateMock).toHaveBeenCalledWith("/");
-
+    await waitFor(() => {
+      expect(navigateMock).toHaveBeenCalledWith("/");
+    });
   });
 
   it("muestra un mensaje de éxito al cerrar sesión", async () => {
-
-    render(
-      <MemoryRouter>
-        <AdminSidebar />
-      </MemoryRouter>
-    );
+    renderComponent();
 
     fireEvent.click(screen.getByText("Cerrar Sesión"));
 
-    expect(toastMock).toHaveBeenCalled();
-
+    await waitFor(() => {
+      expect(toastMock).toHaveBeenCalled();
+    });
   });
-
 });

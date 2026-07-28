@@ -22,6 +22,11 @@ vi.mock("@/hooks/use-toast", () => ({
   }),
 }));
 
+// ✅ Mock del ThemeToggle para evitar depender del ThemeContext
+vi.mock("@/components/theme/ThemeToggle", () => ({
+  ThemeToggle: () => <div data-testid="theme-toggle" />,
+}));
+
 const navigate = vi.fn();
 
 vi.mock("react-router-dom", async () => {
@@ -36,13 +41,11 @@ vi.mock("react-router-dom", async () => {
 // ---------------------------------------
 
 describe("WorkerLogin", () => {
-
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("renderiza el formulario correctamente", () => {
-
     render(
       <MemoryRouter>
         <WorkerLogin />
@@ -50,15 +53,12 @@ describe("WorkerLogin", () => {
     );
 
     expect(screen.getByText("Iniciar Sesión")).toBeInTheDocument();
-
     expect(screen.getByText("Administrador")).toBeInTheDocument();
-
     expect(screen.getByText("Conductor")).toBeInTheDocument();
-
+    expect(screen.getByTestId("theme-toggle")).toBeInTheDocument();
   });
 
   it("permite escribir código de administrador", async () => {
-
     render(
       <MemoryRouter>
         <WorkerLogin />
@@ -70,11 +70,9 @@ describe("WorkerLogin", () => {
     await userEvent.type(input, "adm001");
 
     expect(input).toHaveValue("ADM001");
-
   });
 
   it("muestra la pestaña de conductor", async () => {
-
     render(
       <MemoryRouter>
         <WorkerLogin />
@@ -86,11 +84,9 @@ describe("WorkerLogin", () => {
     expect(
       screen.getByPlaceholderText("ABC-123")
     ).toBeInTheDocument();
-
   });
 
   it("llama al login de administrador cuando los datos son válidos", async () => {
-
     signInWorker.mockResolvedValue({
       error: null,
     });
@@ -117,12 +113,10 @@ describe("WorkerLogin", () => {
       })
     );
 
-    expect(signInWorker).toHaveBeenCalled();
-
+    expect(signInWorker).toHaveBeenCalledWith("ADM001", "123456");
   });
 
   it("muestra mensaje de error cuando el login falla", async () => {
-
     signInWorker.mockResolvedValue({
       error: {
         message: "Credenciales incorrectas",
@@ -154,7 +148,5 @@ describe("WorkerLogin", () => {
     expect(
       await screen.findByText("Credenciales incorrectas")
     ).toBeInTheDocument();
-
   });
-
 });
