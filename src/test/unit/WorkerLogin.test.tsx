@@ -22,7 +22,7 @@ vi.mock("@/hooks/use-toast", () => ({
   }),
 }));
 
-// ✅ Mock del ThemeToggle para evitar depender del ThemeContext
+// Mock del ThemeToggle para evitar depender del ThemeContext
 vi.mock("@/components/theme/ThemeToggle", () => ({
   ThemeToggle: () => <div data-testid="theme-toggle" />,
 }));
