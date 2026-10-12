@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Bus, MapPin, Clock, Building2, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
+import InstallAppButton from "@/components/InstallAppButton";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -57,6 +58,7 @@ const Index = () => {
           <Button size="lg" variant="outline" onClick={() => navigate("/auth/trabajadores")}>
             Acceso Trabajadores
           </Button>
+          <InstallAppButton />
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 mt-8">
