@@ -102,7 +102,7 @@ export function useBusesSimulados(ruta_id?: string) {
     try {
       const { data, error } = await supabase
         .from('buses_simulados')
-        .update(updates)
+        .update(updates as any)
         .eq('id', id)
         .select()
         .single();

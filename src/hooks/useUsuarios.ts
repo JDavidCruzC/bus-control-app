@@ -192,7 +192,7 @@ export function useUsuarios() {
     try {
       const { data, error } = await supabase
         .from('usuarios')
-        .update(updates)
+        .update(updates as any)
         .eq('id', id)
         .select(`
           *,

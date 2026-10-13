@@ -77,7 +77,7 @@ export function useMembresias() {
     try {
       const { data, error } = await supabase
         .from('membresias')
-        .update(updates)
+        .update(updates as any)
         .eq('id', id)
         .select()
         .single();

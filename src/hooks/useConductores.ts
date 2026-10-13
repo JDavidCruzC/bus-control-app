@@ -71,7 +71,7 @@ export function useConductores() {
 
       const { data, error } = await supabase
         .from('conductores')
-        .update(validated)
+        .update(validated as any)
         .eq('id', id)
         .select(`
           *,
