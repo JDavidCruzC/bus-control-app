@@ -1,240 +1,88 @@
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapConfigDialog } from "@/components/admin/MapConfigDialog";
-import { 
-  MapPin, 
-  Navigation, 
-  Layers,
-  Zap,
-  Users,
-  Route,
-  RefreshCw,
-  Settings
-} from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import MapboxMap from "@/components/MapboxMap";
+import { MapPin, Navigation, Route } from "lucide-react";
+import { MapaRutasPublicas } from "@/components/MapaRutasPublicas";
+import { useAuth } from "@/contexts/AuthContext";
+import { useVehiculos } from "@/hooks/useVehiculos";
+import { useParaderos } from "@/hooks/useParaderos";
+import { useLineasBuses } from "@/hooks/useLineasBuses";
+import { routeColor } from "@/lib/geometry";
 
 export function Mapa() {
-  const [selectedLayer, setSelectedLayer] = useState("vehiculos");
-  const [isRealTime, setIsRealTime] = useState(true);
-  const [configOpen, setConfigOpen] = useState(false);
-  const [selectedRoute, setSelectedRoute] = useState<string | null>(null);
+  const { userData } = useAuth();
+  const empresaId = userData?.empresa_id ?? undefined;
+  const { vehiculos } = useVehiculos();
+  const { paraderos } = useParaderos();
+  const { lineasBuses } = useLineasBuses();
 
-  // Datos de ejemplo para el mapa
-  const vehiculosEnRuta = [
-    { id: "1", placa: "ABC-123", ruta: "Ruta Norte", pasajeros: 25, lat: -12.0464, lng: -77.0428 },
-    { id: "2", placa: "DEF-456", ruta: "Ruta Sur", pasajeros: 18, lat: -12.0564, lng: -77.0328 },
-    { id: "3", placa: "GHI-789", ruta: "Ruta Este", pasajeros: 30, lat: -12.0364, lng: -77.0528 }
-  ];
+  const activos = vehiculos.filter((v) => v.activo);
+  const paraderosActivos = paraderos.filter((p) => p.activo);
+  const lineas = [...lineasBuses].sort((a, b) => a.id.localeCompare(b.id));
 
-  const paraderos = [
-    { id: "1", nombre: "Terminal Principal", pasajeros_esperando: 12, lat: -12.0464, lng: -77.0428 },
-    { id: "2", nombre: "Plaza Central", pasajeros_esperando: 8, lat: -12.0564, lng: -77.0328 },
-    { id: "3", nombre: "Universidad", pasajeros_esperando: 15, lat: -12.0364, lng: -77.0528 }
+  const stats = [
+    { icon: Navigation, value: activos.length, label: "Buses activos" },
+    { icon: MapPin, value: paraderosActivos.length, label: "Paraderos" },
+    { icon: Route, value: lineas.filter((l) => l.activo).length, label: "Líneas" },
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Mapa en Tiempo Real</h1>
-          <p className="text-muted-foreground">
-            Monitoreo de vehículos y rutas en tiempo real
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setConfigOpen(true)} className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Configurar
-          </Button>
-          <Button 
-            variant={isRealTime ? "default" : "outline"}
-            onClick={() => setIsRealTime(!isRealTime)}
-            className="flex items-center gap-2"
-          >
-            <Zap className="h-4 w-4" />
-            {isRealTime ? "En Vivo" : "Pausado"}
-          </Button>
-        </div>
+    <div className="space-y-4 md:space-y-6">
+      <div>
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Mapa en Tiempo Real</h1>
+        <p className="text-muted-foreground text-sm md:text-base">Líneas, buses y paraderos de tu empresa</p>
       </div>
 
-      <MapConfigDialog 
-        open={configOpen} 
-        onOpenChange={setConfigOpen}
-        selectedRoute={selectedRoute}
-        onRouteChange={setSelectedRoute}
-      />
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <Navigation className="h-8 w-8 text-blue-500" />
+      <div className="grid grid-cols-3 gap-2 md:gap-4">
+        {stats.map((s) => (
+          <Card key={s.label}>
+            <CardContent className="p-3 md:p-5 flex flex-col md:flex-row items-center gap-1 md:gap-3 text-center md:text-left">
+              <s.icon className="h-5 w-5 md:h-7 md:w-7 text-primary" />
               <div>
-                <p className="text-2xl font-bold text-blue-600">{vehiculosEnRuta.length}</p>
-                <p className="text-muted-foreground text-sm">Vehículos Activos</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-8 w-8 text-green-500" />
-              <div>
-                <p className="text-2xl font-bold text-green-600">{paraderos.length}</p>
-                <p className="text-muted-foreground text-sm">Paraderos Activos</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <Users className="h-8 w-8 text-orange-500" />
-              <div>
-                <p className="text-2xl font-bold text-orange-600">
-                  {vehiculosEnRuta.reduce((acc, v) => acc + v.pasajeros, 0)}
-                </p>
-                <p className="text-muted-foreground text-sm">Pasajeros Transportándose</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <Route className="h-8 w-8 text-purple-500" />
-              <div>
-                <p className="text-2xl font-bold text-purple-600">3</p>
-                <p className="text-muted-foreground text-sm">Rutas Operativas</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Mapa Principal */}
-        <div className="lg:col-span-3">
-          <Card>
-            <CardHeader className="pb-4">
-              <div className="flex justify-between items-center">
-                <CardTitle className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5" />
-                  Mapa Interactivo
-                </CardTitle>
-                <div className="flex gap-2">
-                  <Select value={selectedLayer} onValueChange={setSelectedLayer}>
-                    <SelectTrigger className="w-40">
-                      <Layers className="h-4 w-4 mr-2" />
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="vehiculos">Vehículos</SelectItem>
-                      <SelectItem value="paraderos">Paraderos</SelectItem>
-                      <SelectItem value="rutas">Rutas</SelectItem>
-                      <SelectItem value="todos">Todos</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button variant="outline" size="sm">
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="w-full h-96 rounded-lg overflow-hidden">
-                <MapboxMap selectedLayer={selectedLayer} isRealTime={isRealTime} />
+                <p className="text-lg md:text-2xl font-bold text-primary leading-none">{s.value}</p>
+                <p className="text-muted-foreground text-xs md:text-sm">{s.label}</p>
               </div>
             </CardContent>
           </Card>
-        </div>
+        ))}
+      </div>
 
-        {/* Panel de Información */}
-        <div className="space-y-6">
-          {/* Vehículos en Ruta */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
+        <Card className="lg:col-span-3 overflow-hidden">
+          <CardContent className="p-0">
+            <div className="h-[60vh] min-h-[360px]">
+              <MapaRutasPublicas empresaId={empresaId} mostrarRutas mostrarParaderos mostrarBuses />
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Navigation className="h-5 w-5" />
-                Vehículos en Ruta
-              </CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2"><Route className="h-4 w-4" />Líneas</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {vehiculosEnRuta.map((vehiculo) => (
-                <div key={vehiculo.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                  <div>
-                    <p className="font-medium">{vehiculo.placa}</p>
-                    <p className="text-sm text-muted-foreground">{vehiculo.ruta}</p>
-                  </div>
-                  <div className="text-right">
-                    <Badge variant="secondary">{vehiculo.pasajeros} pax</Badge>
-                  </div>
+            <CardContent className="space-y-2">
+              {lineas.length === 0 && <p className="text-sm text-muted-foreground">Aún no hay líneas</p>}
+              {lineas.map((l, i) => (
+                <div key={l.id} className="flex items-center gap-2 text-sm">
+                  <span className="h-3 w-6 rounded-full shrink-0" style={{ background: routeColor(i) }} />
+                  <span className="font-medium">{l.codigo}</span>
+                  <span className="text-muted-foreground truncate">{l.nombre}</span>
                 </div>
               ))}
             </CardContent>
           </Card>
-
-          {/* Paraderos Activos */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                Paraderos
-              </CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2"><Navigation className="h-4 w-4" />Buses</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {paraderos.map((paradero) => (
-                <div key={paradero.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                  <div>
-                    <p className="font-medium text-sm">{paradero.nombre}</p>
-                  </div>
-                  <div className="text-right">
-                    <Badge variant={paradero.pasajeros_esperando > 10 ? "destructive" : "secondary"}>
-                      {paradero.pasajeros_esperando} esperando
-                    </Badge>
-                  </div>
+            <CardContent className="space-y-2 max-h-64 overflow-y-auto">
+              {vehiculos.length === 0 && <p className="text-sm text-muted-foreground">Aún no hay buses</p>}
+              {vehiculos.map((v) => (
+                <div key={v.id} className="flex items-center justify-between p-2 bg-muted rounded-md text-sm">
+                  <span className="font-medium">{v.placa}</span>
+                  <Badge variant={v.activo ? "default" : "secondary"}>{v.activo ? "Activo" : "Inactivo"}</Badge>
                 </div>
               ))}
-            </CardContent>
-          </Card>
-
-          {/* Estado del Sistema */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Zap className="h-5 w-5" />
-                Estado del Sistema
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm">GPS</span>
-                <Badge variant="default">Activo</Badge>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Comunicación</span>
-                <Badge variant="default">Estable</Badge>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Base de Datos</span>
-                <Badge variant="default">Conectado</Badge>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Última Actualización</span>
-                <span className="text-xs text-muted-foreground">Hace 2s</span>
-              </div>
             </CardContent>
           </Card>
         </div>
