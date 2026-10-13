@@ -17,6 +17,34 @@ import {
   AlertTriangle,
   Building2
 } from "lucide-react";
+import { useRef, useState, type ComponentType } from "react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+const IconStat = ({ icon: Icon, value, label }: { icon: ComponentType<{ className?: string }>; value: string | number; label: string }) => {
+  const [open, setOpen] = useState(false);
+  const timer = useRef<number>();
+  const start = () => { timer.current = window.setTimeout(() => setOpen(true), 300); };
+  const end = () => { window.clearTimeout(timer.current); window.setTimeout(() => setOpen(false), 1200); };
+  return (
+    <Tooltip open={open} onOpenChange={setOpen}>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          aria-label={label}
+          onTouchStart={start}
+          onTouchEnd={end}
+          onTouchCancel={end}
+          onContextMenu={(e) => e.preventDefault()}
+          className="flex flex-col items-center justify-center gap-1 rounded-lg border bg-card p-2 select-none touch-manipulation"
+        >
+          <Icon className="h-5 w-5 text-primary" />
+          <span className="text-sm font-bold text-primary leading-none">{value}</span>
+        </button>
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
+  );
+};
 
 const PublicRoutes = () => {
   const { empresas, loading: loadingEmpresas } = useEmpresas();
@@ -39,8 +67,23 @@ const PublicRoutes = () => {
           </p>
         </div>
 
+        {/* Resumen compacto en celular: iconos con descripción al mantener presionado */}
+        <TooltipProvider delayDuration={150}>
+          <div className="grid grid-cols-5 gap-2 mb-8 md:hidden">
+            {[
+              { icon: Building2, value: loadingEmpresas ? "…" : empresas.length, label: "Empresas operando en el sistema" },
+              { icon: Car, value: loadingRutas ? "…" : rutas.length, label: "Rutas activas en toda la ciudad" },
+              { icon: MapPin, value: 45, label: "Paraderos disponibles" },
+              { icon: Clock, value: "5-22h", label: "Horario: 5:00 - 22:00, Lunes a Domingo" },
+              { icon: Users, value: 28, label: "Vehículos: unidades activas" },
+            ].map((s) => (
+              <IconStat key={s.label} {...s} />
+            ))}
+          </div>
+        </TooltipProvider>
+
         {/* Quick Info Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
