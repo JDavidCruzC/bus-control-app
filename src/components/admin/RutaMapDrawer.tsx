@@ -34,10 +34,25 @@ export function RutaMapDrawer({ onRouteChange, initialRoute = [] }: RutaMapDrawe
     const zoom = parseInt(getConfigValue?.('map_default_zoom') || '13');
 
     const m = L.map(mapContainer.current).setView([lat, lng], zoom);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-      maxZoom: 19,
-    }).addTo(m);
+    const capas: Record<string, L.TileLayer> = {
+      'Estándar': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors', maxZoom: 19,
+      }),
+      'Satélite': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: '© Esri', maxZoom: 19,
+      }),
+      'Relieve': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenTopoMap, © OpenStreetMap contributors', maxZoom: 17,
+      }),
+      'Nocturno': L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© CARTO, © OpenStreetMap contributors', maxZoom: 19,
+      }),
+      'Claro': L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© CARTO, © OpenStreetMap contributors', maxZoom: 19,
+      }),
+    };
+    capas['Estándar'].addTo(m);
+    L.control.layers(capas, undefined, { position: 'topright', collapsed: true }).addTo(m);
     layerGroup.current = L.layerGroup().addTo(m);
 
     m.on('click', (e: L.LeafletMouseEvent) => {
