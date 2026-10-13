@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { MailCheck } from "lucide-react";
+import { KeyRound } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -14,10 +14,10 @@ interface Props {
   returnTo?: string;
 }
 
-export function ForgotPasswordDialog({ open, onOpenChange, defaultEmail = "", returnTo = "/empresa/auth" }: Props) {
+export function ForgotPasswordDialog({ open, onOpenChange, defaultEmail = "" }: Props) {
   const [email, setEmail] = useState(defaultEmail);
   const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [done, setDone] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,23 +28,22 @@ export function ForgotPasswordDialog({ open, onOpenChange, defaultEmail = "", re
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(value, {
-      redirectTo: `${window.location.origin}/reset-password?return=${encodeURIComponent(returnTo)}`,
-    });
+    const { data, error } = await supabase.functions.invoke("reset-password-temp", { body: { email: value } });
     setLoading(false);
-    if (error) {
-      const msg = error.message.toLowerCase().includes("rate")
-        ? "Demasiados intentos. Espera unos minutos e inténtalo de nuevo."
-        : "No se pudo enviar el correo. Inténtalo nuevamente.";
-      toast({ title: "Error", description: msg, variant: "destructive" });
+    if (error || data?.error) {
+      let msg = data?.error;
+      if (!msg && error && (error as any).context?.json) {
+        try { msg = (await (error as any).context.json()).error; } catch { /* noop */ }
+      }
+      toast({ title: "Error", description: msg || "No se pudo restablecer la contraseña.", variant: "destructive" });
       return;
     }
-    setSent(true);
+    setDone(true);
   };
 
   const close = (o: boolean) => {
     onOpenChange(o);
-    if (!o) setTimeout(() => setSent(false), 200);
+    if (!o) setTimeout(() => setDone(false), 200);
   };
 
   return (
@@ -53,17 +52,19 @@ export function ForgotPasswordDialog({ open, onOpenChange, defaultEmail = "", re
         <DialogHeader>
           <DialogTitle>Recuperar contraseña</DialogTitle>
           <DialogDescription>
-            Te enviaremos un enlace a tu correo para crear una nueva contraseña.
+            Ingresa tu correo y tu contraseña se restablecerá a una clave temporal.
           </DialogDescription>
         </DialogHeader>
-        {sent ? (
+        {done ? (
           <div className="space-y-4 text-center py-2">
-            <MailCheck className="h-12 w-12 text-primary mx-auto" />
+            <KeyRound className="h-12 w-12 text-primary mx-auto" />
             <p className="text-sm">
-              Si <strong>{email}</strong> está registrado, recibirás un correo en unos minutos.
-              Revisa también tu carpeta de spam.
+              Listo. Tu contraseña temporal es <strong className="text-lg">123456</strong>.
             </p>
-            <Button className="w-full" onClick={() => close(false)}>Entendido</Button>
+            <p className="text-sm text-muted-foreground">
+              Inicia sesión con ella y el sistema te pedirá crear una nueva contraseña.
+            </p>
+            <Button className="w-full" onClick={() => close(false)}>Ir a iniciar sesión</Button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
@@ -79,7 +80,7 @@ export function ForgotPasswordDialog({ open, onOpenChange, defaultEmail = "", re
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Enviando..." : "Enviar enlace de recuperación"}
+              {loading ? "Restableciendo..." : "Restablecer contraseña"}
             </Button>
           </form>
         )}
