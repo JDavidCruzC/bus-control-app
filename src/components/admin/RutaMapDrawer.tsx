@@ -38,7 +38,7 @@ export function RutaMapDrawer({ onRouteChange, initialRoute = [] }: RutaMapDrawe
   const fitted = useRef(false);
   const [coordinates, setCoordinates] = useState<[number, number][]>(initialRoute);
   const [idaVuelta, setIdaVuelta] = useState(false);
-  const { getConfigValue } = useConfiguraciones();
+  const { getConfigValue, configuraciones } = useConfiguraciones();
   const onChangeRef = useRef(onRouteChange);
   onChangeRef.current = onRouteChange;
 
@@ -102,13 +102,29 @@ export function RutaMapDrawer({ onRouteChange, initialRoute = [] }: RutaMapDrawe
     });
 
     map.current = m;
+    // Recalcular tamaño cuando el contenedor aparece o cambia (pestañas/diálogos)
+    const ro = new ResizeObserver(() => m.invalidateSize());
+    ro.observe(mapContainer.current);
     setTimeout(() => m.invalidateSize(), 200);
     return () => {
+      ro.disconnect();
       m.remove();
       map.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Centrar en la ubicación configurada cuando cargue (si aún no hay puntos)
+  useEffect(() => {
+    const m = map.current;
+    if (!m || configuraciones.length === 0 || coordinates.length > 0) return;
+    const lat = parseFloat(getConfigValue('map_default_lat') || '-17.6396');
+    const lng = parseFloat(getConfigValue('map_default_lng') || '-71.3378');
+    const zoom = parseInt(getConfigValue('map_default_zoom') || '13');
+    m.setView([lat, lng], zoom);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [configuraciones]);
+
 
   // Redibujar marcadores y línea
   useEffect(() => {
