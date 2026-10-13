@@ -38,7 +38,7 @@ export function RutaMapDrawer({ onRouteChange, initialRoute = [] }: RutaMapDrawe
   const fitted = useRef(false);
   const [coordinates, setCoordinates] = useState<[number, number][]>(initialRoute);
   const [idaVuelta, setIdaVuelta] = useState(false);
-  const { getConfigValue } = useConfiguraciones();
+  const { getConfigValue, configuraciones } = useConfiguraciones();
   const onChangeRef = useRef(onRouteChange);
   onChangeRef.current = onRouteChange;
 
