@@ -1,0 +1,2 @@
+CREATE POLICY "Publico puede ver rutas publicadas" ON public.rutas_publicas FOR SELECT TO anon, authenticated USING (visible_publico = true);
+GRANT SELECT ON public.rutas_publicas TO anon, authenticated;
