@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.create_simulated_buses_for_route() FROM PUBLIC, anon, authenticated;
