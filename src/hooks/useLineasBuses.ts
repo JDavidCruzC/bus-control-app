@@ -119,7 +119,7 @@ export function useLineasBuses() {
 
   useEffect(() => {
     fetchLineasBuses();
-  }, []);
+  }, [empresaId]);
 
   return {
     lineasBuses,
