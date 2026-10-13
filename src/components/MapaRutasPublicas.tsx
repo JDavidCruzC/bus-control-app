@@ -157,6 +157,8 @@ export function MapaRutasPublicas({
   const stopLayerGroup = useRef<L.LayerGroup | null>(null);
   const busLayerGroup = useRef<L.LayerGroup | null>(null);
   const busMarkersRef = useRef<Map<string, L.Marker>>(new Map());
+  const initialFitDone = useRef(false);
+  const centeredOnUser = useRef(false);
   const userMarkerRef = useRef<L.Marker | null>(null);
   const userAccuracyRef = useRef<L.Circle | null>(null);
   const [loading, setLoading] = useState(true);
@@ -216,7 +218,10 @@ export function MapaRutasPublicas({
         });
       }
 
-      if (bounds.isValid()) map.current.fitBounds(bounds, { padding: [45, 45], maxZoom: 16 });
+      if (bounds.isValid() && !initialFitDone.current) {
+        initialFitDone.current = true;
+        map.current.fitBounds(bounds, { padding: [45, 45], maxZoom: 16 });
+      }
     } catch (error) {
       console.error('Error cargando rutas y paraderos:', error);
       setMapError('No se pudieron cargar rutas o paraderos. El mapa base sigue disponible.');
@@ -329,11 +334,16 @@ export function MapaRutasPublicas({
   const ubicarUsuario = () => {
     if (!map.current) return;
     setMapError(null);
-    map.current.locate({ setView: true, maxZoom: 17, watch: true, enableHighAccuracy: true, timeout: 12000 });
+    centeredOnUser.current = false;
+    map.current.locate({ setView: false, maxZoom: 17, watch: true, enableHighAccuracy: true, timeout: 12000 });
     map.current.off('locationfound');
     map.current.off('locationerror');
     map.current.on('locationfound', (event) => {
       const latLng = event.latlng;
+      if (!centeredOnUser.current) {
+        centeredOnUser.current = true;
+        map.current?.setView(latLng, Math.max(map.current.getZoom(), 16));
+      }
       if (!userMarkerRef.current) {
         userMarkerRef.current = L.marker(latLng, {
           icon: createDivIcon(`<div style="width:34px;height:34px;border-radius:999px;background:#0284c7;color:white;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 24px rgba(2,132,199,.45);border:3px solid white;font-size:17px">📍</div>`),
