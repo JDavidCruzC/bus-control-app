@@ -77,7 +77,7 @@ export function usePagos() {
     try {
       const { data, error } = await supabase
         .from('pagos')
-        .update(updates)
+        .update(updates as any)
         .eq('id', id)
         .select()
         .single();

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
@@ -29,15 +30,19 @@ export type LineaBus = {
 };
 
 export function useLineasBuses() {
+  const { userData } = useAuth();
+  const empresaId = (userData as any)?.empresa_id as string | undefined;
   const [lineasBuses, setLineasBuses] = useState<LineaBus[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   const fetchLineasBuses = async () => {
     try {
+      if (!empresaId) { setLineasBuses([]); return; }
       const { data, error } = await supabase
         .from('rutas')
         .select('*')
+        .eq('empresa_id', empresaId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -60,7 +65,7 @@ export function useLineasBuses() {
 
       const { data, error } = await supabase
         .from('rutas')
-        .insert([validated])
+        .insert([{ ...validated, empresa_id: empresaId }])
         .select()
         .single();
 
@@ -114,7 +119,7 @@ export function useLineasBuses() {
 
   useEffect(() => {
     fetchLineasBuses();
-  }, []);
+  }, [empresaId]);
 
   return {
     lineasBuses,

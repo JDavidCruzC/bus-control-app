@@ -99,6 +99,7 @@ export function UsuarioDialog({ open, onOpenChange, usuario }: UsuarioDialogProp
       .from('rutas')
       .select('id, nombre, codigo')
       .eq('activo', true)
+      .eq('empresa_id', userData?.empresa_id ?? '00000000-0000-0000-0000-000000000000')
       .order('codigo');
     
     if (data) setRutas(data);

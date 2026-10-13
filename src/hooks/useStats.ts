@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
 export type DashboardStats = {
@@ -28,6 +29,8 @@ export function useStats() {
     reportesPendientes: 0,
   });
   const [loading, setLoading] = useState(true);
+  const { userData } = useAuth();
+  const eid = (userData as any)?.empresa_id ?? '00000000-0000-0000-0000-000000000000';
 
   const fetchStats = async () => {
     try {
@@ -36,7 +39,8 @@ export function useStats() {
       // Fetch vehicle stats
       const { data: vehiculos, error: vehiculosError } = await supabase
         .from('vehiculos')
-        .select('activo');
+        .select('activo')
+        .eq('empresa_id', eid);
       
       // Fetch conductor stats
       const { data: conductores, error: conductoresError } = await supabase
@@ -46,12 +50,14 @@ export function useStats() {
       // Fetch route stats
       const { data: rutas, error: rutasError } = await supabase
         .from('rutas')
-        .select('activo');
+        .select('activo')
+        .eq('empresa_id', eid);
 
       // Fetch paradero stats
       const { data: paraderos, error: paraderosError } = await supabase
         .from('paraderos')
-        .select('activo');
+        .select('activo')
+        .eq('empresa_id', eid);
 
       // Fetch today's trips
       const today = new Date().toISOString().split('T')[0];
@@ -92,7 +98,7 @@ export function useStats() {
 
   useEffect(() => {
     fetchStats();
-  }, []);
+  }, [eid]);
 
   return {
     stats,
