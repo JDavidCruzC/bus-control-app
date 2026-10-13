@@ -11,6 +11,7 @@ interface RutaMapDrawerProps {
   /** Emite la ruta completa [lng, lat]; si es ida y vuelta incluye el regreso */
   onRouteChange?: (coordinates: [number, number][]) => void;
   initialRoute?: [number, number][]; // [lng, lat]
+  initialIdaVuelta?: boolean;
 }
 
 const dot = (bg: string, size: number, label = '') =>
@@ -31,13 +32,13 @@ function segDist(p: L.Point, a: L.Point, b: L.Point) {
   return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
 }
 
-export function RutaMapDrawer({ onRouteChange, initialRoute = [] }: RutaMapDrawerProps) {
+export function RutaMapDrawer({ onRouteChange, initialRoute = [], initialIdaVuelta = false }: RutaMapDrawerProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const layerGroup = useRef<L.LayerGroup | null>(null);
   const fitted = useRef(false);
   const [coordinates, setCoordinates] = useState<[number, number][]>(initialRoute);
-  const [idaVuelta, setIdaVuelta] = useState(false);
+  const [idaVuelta, setIdaVuelta] = useState(initialIdaVuelta);
   const { getConfigValue, configuraciones } = useConfiguraciones();
   const onChangeRef = useRef(onRouteChange);
   onChangeRef.current = onRouteChange;
