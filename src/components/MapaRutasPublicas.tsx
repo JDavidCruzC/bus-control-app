@@ -259,11 +259,30 @@ export function MapaRutasPublicas({
     L.control.zoom({ position: 'topright' }).addTo(instance);
     L.control.scale({ metric: true, imperial: false, position: 'bottomright' }).addTo(instance);
 
+    // En celulares: 1 dedo = scroll de la página, 2 dedos = mover/zoom del mapa
+    const container = mapContainer.current;
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length >= 2) instance.dragging.enable();
+      else instance.dragging.disable();
+    };
+    const onTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length === 0) instance.dragging.disable();
+    };
+    if (isTouch) {
+      instance.dragging.disable();
+      container.style.touchAction = 'pan-y';
+      container.addEventListener('touchstart', onTouchStart, { passive: true });
+      container.addEventListener('touchend', onTouchEnd, { passive: true });
+    }
+
     setIsMapReady(true);
     setLoading(false);
     setTimeout(() => instance.invalidateSize(), 150);
 
     return () => {
+      container.removeEventListener('touchstart', onTouchStart);
+      container.removeEventListener('touchend', onTouchEnd);
       instance.stopLocate();
       instance.remove();
       map.current = null;
