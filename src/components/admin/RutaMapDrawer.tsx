@@ -102,8 +102,12 @@ export function RutaMapDrawer({ onRouteChange, initialRoute = [] }: RutaMapDrawe
     });
 
     map.current = m;
+    // Recalcular tamaño cuando el contenedor aparece o cambia (pestañas/diálogos)
+    const ro = new ResizeObserver(() => m.invalidateSize());
+    ro.observe(mapContainer.current);
     setTimeout(() => m.invalidateSize(), 200);
     return () => {
+      ro.disconnect();
       m.remove();
       map.current = null;
     };
