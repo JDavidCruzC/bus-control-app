@@ -1,0 +1,3 @@
+ALTER TABLE public.rutas_publicas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.reportes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.ubicaciones_tiempo_real ENABLE ROW LEVEL SECURITY;
