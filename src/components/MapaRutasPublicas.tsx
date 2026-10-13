@@ -31,7 +31,7 @@ const MAP_STYLES: Array<{
       'https://a.tile.openstreetmap.org/13/2310/3956.png',
     url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     attribution: '&copy; OpenStreetMap',
-    maxZoom: 19,
+    maxZoom: 17,
   },
   {
     id: 'satelite',
@@ -40,7 +40,7 @@ const MAP_STYLES: Array<{
       'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/13/3956/2310',
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     attribution: 'Tiles &copy; Esri',
-    maxZoom: 19,
+    maxZoom: 17,
   },
   {
     id: 'relieve',
@@ -56,7 +56,7 @@ const MAP_STYLES: Array<{
     preview: 'https://a.basemaps.cartocdn.com/dark_all/13/2310/3956.png',
     url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
     attribution: '&copy; CARTO &copy; OpenStreetMap',
-    maxZoom: 19,
+    maxZoom: 17,
   },
   {
     id: 'claro',
@@ -64,7 +64,7 @@ const MAP_STYLES: Array<{
     preview: 'https://a.basemaps.cartocdn.com/light_all/13/2310/3956.png',
     url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
     attribution: '&copy; CARTO &copy; OpenStreetMap',
-    maxZoom: 19,
+    maxZoom: 17,
   },
 ];
 
@@ -287,6 +287,7 @@ export function MapaRutasPublicas({
       crossOrigin: true,
     });
     newLayer.addTo(instance);
+    instance.setMaxZoom(selectedStyle.maxZoom);
     baseLayerRef.current = newLayer;
 
     const removeOld = () => {
