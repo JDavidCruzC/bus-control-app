@@ -1,3 +1,4 @@
+import { colorForRoute } from '@/lib/geometry';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -194,7 +195,7 @@ export function MapaRutasPublicas({
           const coords = extractLineCoordinates(rutaGeom.geom);
           if (coords.length < 2) return;
           const latLngs = coords.map(([lng, lat]) => L.latLng(lat, lng));
-          const color = ROUTE_COLORS[index % ROUTE_COLORS.length];
+          const color = colorForRoute(ruta.id ?? rutaGeom.ruta_id, 0);
           L.polyline(latLngs, { color, weight: 6, opacity: 0.9, lineCap: 'round', lineJoin: 'round' })
             .bindPopup(`<div style="min-width:170px"><strong>Línea ${escapeHtml(ruta.codigo)}</strong><br/><span>${escapeHtml(ruta.nombre)}</span></div>`)
             .addTo(routeLayerGroup.current!);

@@ -42,3 +42,11 @@ export function splitIdaVuelta(coords: [number, number][]): { ida: [number, numb
   }
   return { ida: coords.slice(0, (coords.length + 1) / 2), idaVuelta: true };
 }
+
+const ROUTE_PALETTE = ['#2563eb', '#dc2626', '#059669', '#d97706', '#7c3aed', '#db2777', '#0891b2', '#65a30d', '#ea580c', '#4f46e5', '#be123c', '#0d9488'];
+/** Color estable y distinto por línea (según su id). */
+export function colorForRoute(id: string, index = 0): string {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return ROUTE_PALETTE[(h + index) % ROUTE_PALETTE.length];
+}
