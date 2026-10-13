@@ -114,6 +114,18 @@ export function RutaMapDrawer({ onRouteChange, initialRoute = [] }: RutaMapDrawe
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Centrar en la ubicación configurada cuando cargue (si aún no hay puntos)
+  useEffect(() => {
+    const m = map.current;
+    if (!m || configuraciones.length === 0 || coordinates.length > 0) return;
+    const lat = parseFloat(getConfigValue('map_default_lat') || '-17.6396');
+    const lng = parseFloat(getConfigValue('map_default_lng') || '-71.3378');
+    const zoom = parseInt(getConfigValue('map_default_zoom') || '13');
+    m.setView([lat, lng], zoom);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [configuraciones]);
+
+
   // Redibujar marcadores y línea
   useEffect(() => {
     const m = map.current;
