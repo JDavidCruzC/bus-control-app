@@ -151,13 +151,54 @@ const PublicRoutes = () => {
         </div>
 
         {/* Empresas Disponibles */}
+        {/* Accesos rápidos en celular */}
+        <div className="grid grid-cols-2 gap-3 mb-8 md:hidden">
+          {[
+            { to: "/publico/rutas", icon: Route, label: "Ver rutas", primary: true },
+            { to: "/publico/ubicacion", icon: Navigation, label: "Mapa en vivo", primary: true },
+            { to: "/publico/rutas", icon: MapPin, label: "Paraderos" },
+            { to: "/publico/ubicacion", icon: Clock, label: "Llegadas" },
+          ].map((a) => (
+            <Link
+              key={a.label}
+              to={a.to}
+              className={`flex flex-col items-center justify-center gap-2 rounded-xl border p-4 text-sm font-medium ${a.primary ? "bg-primary text-primary-foreground border-primary" : "bg-card text-foreground"}`}
+            >
+              <a.icon className="h-6 w-6" />
+              {a.label}
+            </Link>
+          ))}
+        </div>
+
         {empresas.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2">
-              <Building2 className="h-6 w-6" />
+          <div className="mb-8 md:mb-12">
+            <h2 className="text-lg md:text-2xl font-semibold mb-3 md:mb-6 flex items-center gap-2">
+              <Building2 className="h-5 w-5 md:h-6 md:w-6" />
               Empresas de Transporte
             </h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Lista compacta en celular */}
+            <div className="md:hidden divide-y rounded-xl border bg-card">
+              {empresas.map((empresa) => (
+                <div key={empresa.id} className="flex items-center gap-3 p-3">
+                  {empresa.logo_url ? (
+                    <img src={empresa.logo_url} alt={empresa.nombre} className="h-8 w-8 object-contain rounded" />
+                  ) : (
+                    <Building2 className="h-5 w-5 text-primary shrink-0" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{empresa.nombre}</p>
+                    {empresa.telefono && <p className="text-xs text-muted-foreground">{empresa.telefono}</p>}
+                  </div>
+                  <Badge variant="outline">{rutas.filter(r => r.empresa_id === empresa.id).length} rutas</Badge>
+                  {empresa.telefono && (
+                    <a href={`tel:${empresa.telefono}`} aria-label={`Llamar a ${empresa.nombre}`} className="p-2 rounded-md border">
+                      <Phone className="h-4 w-4" />
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="hidden md:grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {empresas.map((empresa) => (
                 <Card key={empresa.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
@@ -194,7 +235,7 @@ const PublicRoutes = () => {
         )}
 
         {/* Main Features */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="hidden md:grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Routes Section */}
           <Card>
             <CardHeader>
