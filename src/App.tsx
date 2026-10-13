@@ -20,6 +20,7 @@ import PublicRoutes from "./pages/PublicRoutes";
 import ConsultarRutas from "./pages/public/ConsultarRutas";
 import UbicacionTiempoReal from "./pages/public/UbicacionTiempoReal";
 import NotFound from "./pages/NotFound";
+import ResetPassword from "./pages/auth/ResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ const App = () => (
                 <Route path="/auth/trabajadores" element={<WorkerLogin />} />
                 <Route path="/auth/clientes" element={<ClientAuth />} />
                 <Route path="/auth/superadmin" element={<SuperAdminAuth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/publico/*" element={<PublicIndex />} />
                 <Route path="/admin/*" element={<AdminIndex />} />
                 <Route path="/superadmin/*" element={<SuperAdminIndex />} />

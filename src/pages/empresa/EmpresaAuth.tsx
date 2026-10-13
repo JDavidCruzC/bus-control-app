@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Building2, Eye, EyeOff } from "lucide-react";
 import { loginSchema, registrationSchema } from "@/lib/validations/auth";
+import { ForgotPasswordDialog } from "@/components/auth/ForgotPasswordDialog";
 
 export default function EmpresaAuth() {
   const [loading, setLoading] = useState(false);
@@ -17,6 +18,7 @@ export default function EmpresaAuth() {
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
 
   const [loginData, setLoginData] = useState({
     email: "",
@@ -244,11 +246,19 @@ export default function EmpresaAuth() {
                       )}
                     </button>
                   </div>
+                  <div className="text-right">
+                    <button type="button" onClick={() => setForgotOpen(true)}
+                      className="text-sm text-primary hover:underline">
+                      ¿Olvidaste tu contraseña?
+                    </button>
+                  </div>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
                 </Button>
               </form>
+              <ForgotPasswordDialog key={forgotOpen ? "o" : "c"} open={forgotOpen} onOpenChange={setForgotOpen}
+                defaultEmail={loginData.email} returnTo="/empresa/auth" />
             </TabsContent>
 
             <TabsContent value="register">
