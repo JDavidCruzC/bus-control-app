@@ -134,10 +134,7 @@ export function useBusesEnRuta(empresaId?: string) {
           const rutaGeom = rutasGeomCache.find(rg => rg.ruta_id === bus.rutaId);
           if (!rutaGeom || !rutaGeom.geom) return bus;
 
-          let coordinates: [number, number][] = [];
-          if (typeof rutaGeom.geom === 'object' && rutaGeom.geom && 'coordinates' in rutaGeom.geom) {
-            coordinates = (rutaGeom.geom as any).coordinates;
-          }
+          const coordinates: [number, number][] = parseLineString(rutaGeom.geom);
 
           if (coordinates.length < 2) return bus;
 
