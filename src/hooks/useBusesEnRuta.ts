@@ -80,10 +80,7 @@ export function useBusesEnRuta(empresaId?: string) {
         if (empresaId && rutaGeom.ruta.empresa_id !== empresaId) continue;
 
         // Parsear geometría
-        let coordinates: [number, number][] = [];
-        if (typeof rutaGeom.geom === 'object' && rutaGeom.geom && 'coordinates' in rutaGeom.geom) {
-          coordinates = (rutaGeom.geom as any).coordinates;
-        }
+        const coordinates: [number, number][] = parseLineString(rutaGeom.geom);
 
         if (coordinates.length < 2) continue;
 
