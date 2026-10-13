@@ -73,27 +73,27 @@ export default function UbicacionTiempoReal() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-background p-3 sm:p-6 overflow-x-hidden">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="outline" asChild>
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 min-w-0">
+            <Button variant="outline" size="sm" asChild className="self-start">
               <Link to="/publico">
                 ← Regresar al Inicio
               </Link>
             </Button>
             <div>
-              <h1 className="text-4xl font-bold text-foreground">
+              <h1 className="text-2xl sm:text-4xl font-bold text-foreground">
                 Ubicación en Tiempo Real
               </h1>
-              <p className="text-xl text-muted-foreground mt-2">
+              <p className="text-sm sm:text-xl text-muted-foreground mt-1 sm:mt-2">
                 Seguimiento en vivo de nuestra flota de vehículos
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 sm:gap-4 justify-between md:justify-end">
+            <div className="text-left md:text-right text-xs sm:text-sm text-muted-foreground">
               <p>Última actualización:</p>
               <p>{lastUpdate.toLocaleTimeString()}</p>
             </div>
@@ -115,7 +115,7 @@ export default function UbicacionTiempoReal() {
         </div>
 
         {/* Filtros */}
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
           <Filter className="h-5 w-5 text-muted-foreground" />
           
           {/* Filtro de Empresa */}
@@ -123,7 +123,7 @@ export default function UbicacionTiempoReal() {
             setEmpresaFiltro(v === "todas" ? null : v);
             setRutaFiltro(null); // Resetear filtro de ruta al cambiar empresa
           }}>
-            <SelectTrigger className="w-[280px]">
+            <SelectTrigger className="w-full sm:w-[280px] flex-1 sm:flex-none min-w-0">
               <SelectValue placeholder="Todas las empresas" />
             </SelectTrigger>
             <SelectContent>
@@ -141,7 +141,7 @@ export default function UbicacionTiempoReal() {
 
           {/* Filtro de Ruta */}
           <Select value={rutaFiltro || "todas_rutas"} onValueChange={(v) => setRutaFiltro(v === "todas_rutas" ? null : v)}>
-            <SelectTrigger className="w-[280px]">
+            <SelectTrigger className="w-full sm:w-[280px] flex-1 sm:flex-none min-w-0">
               <SelectValue placeholder="Todas las líneas" />
             </SelectTrigger>
             <SelectContent>
@@ -170,65 +170,65 @@ export default function UbicacionTiempoReal() {
         )}
 
         {/* Estadísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="p-3 pt-3 sm:p-6 sm:pt-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
                   <MapPin className="h-5 w-5 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  <p className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">
                     {vehiculosActivos.length}
                   </p>
-                  <p className="text-sm text-muted-foreground">Vehículos Activos</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Vehículos Activos</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="p-3 pt-3 sm:p-6 sm:pt-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
                   <MapPin className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{vehiculosActivos.length}</p>
-                  <p className="text-sm text-muted-foreground">Total Ubicaciones</p>
+                  <p className="text-xl sm:text-2xl font-bold">{vehiculosActivos.length}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Total Ubicaciones</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="p-3 pt-3 sm:p-6 sm:pt-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
                   <Gauge className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">
+                  <p className="text-xl sm:text-2xl font-bold">
                     {vehiculosActivos.length > 0 
                       ? Math.round(vehiculosActivos.reduce((acc, b) => acc + b.velocidad, 0) / vehiculosActivos.length)
                       : 0
                     }
                   </p>
-                  <p className="text-sm text-muted-foreground">Velocidad Promedio</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Velocidad Promedio</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="p-3 pt-3 sm:p-6 sm:pt-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-orange-100 dark:bg-orange-900 rounded-lg">
                   <Clock className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">30s</p>
-                  <p className="text-sm text-muted-foreground">Actualización Auto</p>
+                  <p className="text-xl sm:text-2xl font-bold">30s</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Actualización Auto</p>
                 </div>
               </div>
             </CardContent>
@@ -249,7 +249,7 @@ export default function UbicacionTiempoReal() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[500px] rounded-lg overflow-hidden">
+              <div className="h-[60vh] min-h-[320px] sm:h-[500px] rounded-lg overflow-hidden">
                 <MapaRutasPublicas 
                   empresaId={empresaFiltro || undefined}
                   mostrarRutas={true}
@@ -281,7 +281,7 @@ export default function UbicacionTiempoReal() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     {vehiculos.map((bus) => (
                       <div key={bus.id} className="p-3 border rounded-lg space-y-2">
                         <div className="flex items-center justify-between">
