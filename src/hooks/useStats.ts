@@ -98,7 +98,7 @@ export function useStats() {
 
   useEffect(() => {
     fetchStats();
-  }, []);
+  }, [eid]);
 
   return {
     stats,
