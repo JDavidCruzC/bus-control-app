@@ -1,4 +1,4 @@
-import { colorForRoute } from '@/lib/geometry';
+import { routeColor } from '@/lib/geometry';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -188,14 +188,14 @@ export function MapaRutasPublicas({
           .from('rutas_geometria')
           .select(`id, ruta_id, geom, ruta:rutas (id, codigo, nombre, empresa_id)`);
 
-        rutasGeom?.forEach((rutaGeom: any, index) => {
+        [...(rutasGeom || [])].sort((a: any, b: any) => String(a.ruta_id).localeCompare(String(b.ruta_id))).forEach((rutaGeom: any, index) => {
           const ruta = rutaGeom.ruta;
           if (!rutaGeom.geom || !ruta) return;
           if (empresaId && ruta.empresa_id !== empresaId) return;
           const coords = extractLineCoordinates(rutaGeom.geom);
           if (coords.length < 2) return;
           const latLngs = coords.map(([lng, lat]) => L.latLng(lat, lng));
-          const color = colorForRoute(ruta.id ?? rutaGeom.ruta_id, 0);
+          const color = routeColor(index);
           L.polyline(latLngs, { color, weight: 6, opacity: 0.9, lineCap: 'round', lineJoin: 'round' })
             .bindPopup(`<div style="min-width:170px"><strong>Línea ${escapeHtml(ruta.codigo)}</strong><br/><span>${escapeHtml(ruta.nombre)}</span></div>`)
             .addTo(routeLayerGroup.current!);

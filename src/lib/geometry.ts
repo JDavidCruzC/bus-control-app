@@ -50,3 +50,7 @@ export function colorForRoute(id: string, index = 0): string {
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
   return ROUTE_PALETTE[(h + index) % ROUTE_PALETTE.length];
 }
+/** Color por posición: garantiza colores distintos entre líneas (hasta 12). */
+export function routeColor(index: number): string {
+  return ROUTE_PALETTE[index % ROUTE_PALETTE.length];
+}
