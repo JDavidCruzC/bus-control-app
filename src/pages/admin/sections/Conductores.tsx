@@ -2,16 +2,19 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { UserCheck, Search, Phone, Edit, ToggleLeft, ToggleRight } from "lucide-react";
+import { UserCheck, Search, Phone, KeyRound, Plus, ToggleLeft, ToggleRight } from "lucide-react";
 import { useConductores, type Conductor } from "@/hooks/useConductores";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { NuevoConductorDialog, CambiarPasswordConductorDialog } from "@/components/admin/ConductorAccesoDialog";
 
 export function Conductores() {
-  const { conductores, loading, updateConductor } = useConductores();
+  const { conductores, loading, updateConductor, refetch } = useConductores();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<'all' | 'activo' | 'inactivo'>('all');
+  const [nuevoOpen, setNuevoOpen] = useState(false);
+  const [pwdConductor, setPwdConductor] = useState<{ id: string; placa: string; nombre: string } | null>(null);
 
   const filteredConductores = conductores.filter(conductor => {
     const matchesSearch = conductor.usuario?.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -51,7 +54,13 @@ export function Conductores() {
             Administrar conductores de la flota de transporte
           </p>
         </div>
+        <Button onClick={() => setNuevoOpen(true)}>
+          <Plus className="h-4 w-4 mr-1" />
+          Nuevo conductor
+        </Button>
       </div>
+      <NuevoConductorDialog open={nuevoOpen} onOpenChange={setNuevoOpen} onDone={refetch} />
+      <CambiarPasswordConductorDialog conductor={pwdConductor} onOpenChange={(o) => !o && setPwdConductor(null)} />
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
@@ -223,10 +232,10 @@ export function Conductores() {
                     <Button 
                       variant="outline" 
                       size="sm"
-                      disabled
+                      onClick={() => setPwdConductor({ id: conductor.id, placa: conductor.placa, nombre: `${conductor.usuario?.nombre ?? ''} ${conductor.usuario?.apellido ?? ''}` })}
                     >
-                      <Edit className="h-4 w-4 mr-1" />
-                      Editar
+                      <KeyRound className="h-4 w-4 mr-1" />
+                      Contraseña
                     </Button>
                   </div>
                 </div>
