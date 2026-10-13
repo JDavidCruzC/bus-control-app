@@ -11,6 +11,7 @@ import { useLineasBuses, type LineaBus } from "@/hooks/useLineasBuses";
 import { RutaMapDrawer } from "./RutaMapDrawer";
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from "@/components/ui/badge";
+import { parseLineString, splitIdaVuelta } from "@/lib/geometry";
 
 interface LineaBusDialogProps {
   open: boolean;
@@ -47,6 +48,29 @@ export function LineaBusDialog({ open, onOpenChange, lineaBus }: LineaBusDialogP
       });
     }
   }, [lineaBus]);
+
+  // Cargar el trayecto guardado al editar
+  const [initialRoute, setInitialRoute] = useState<{ coords: [number, number][]; idaVuelta: boolean; key: string }>({ coords: [], idaVuelta: false, key: 'nuevo' });
+  useEffect(() => {
+    if (!open) return;
+    if (!lineaBus) {
+      setInitialRoute({ coords: [], idaVuelta: false, key: `nuevo-${Date.now()}` });
+      return;
+    }
+    let cancel = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from('rutas_geometria')
+        .select('geom')
+        .eq('ruta_id', lineaBus.id)
+        .maybeSingle();
+      if (cancel) return;
+      if (error) console.error('Error cargando trayecto:', error);
+      const { ida, idaVuelta } = splitIdaVuelta(parseLineString(data?.geom));
+      setInitialRoute({ coords: ida, idaVuelta, key: `${lineaBus.id}-${Date.now()}` });
+    })();
+    return () => { cancel = true; };
+  }, [open, lineaBus?.id]);
 
   const handleRouteChange = (coordinates: [number, number][]) => {
     setRouteCoordinates(coordinates);
@@ -274,8 +298,10 @@ export function LineaBusDialog({ open, onOpenChange, lineaBus }: LineaBusDialogP
               </div>
 
               <RutaMapDrawer 
+                key={initialRoute.key}
                 onRouteChange={handleRouteChange}
-                initialRoute={routeCoordinates}
+                initialRoute={initialRoute.coords}
+                initialIdaVuelta={initialRoute.idaVuelta}
               />
 
               {routeCoordinates.length > 1 && (
