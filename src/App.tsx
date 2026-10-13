@@ -21,6 +21,7 @@ import ConsultarRutas from "./pages/public/ConsultarRutas";
 import UbicacionTiempoReal from "./pages/public/UbicacionTiempoReal";
 import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/auth/ResetPassword";
+import { ForceChangePassword } from "@/components/auth/ForceChangePassword";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
+            <ForceChangePassword />
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />
