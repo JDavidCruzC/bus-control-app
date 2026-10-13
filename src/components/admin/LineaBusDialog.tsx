@@ -113,9 +113,10 @@ export function LineaBusDialog({ open, onOpenChange, lineaBus }: LineaBusDialogP
           console.error('Error saving route geometry:', geometryError);
           toast({
             title: "Advertencia",
-            description: "La línea se guardó pero hubo un error al guardar el trayecto",
+            description: `La línea se guardó pero el trayecto no: ${geometryError.message}. Tu trazo sigue aquí, intenta guardar de nuevo.`,
             variant: "destructive"
           });
+          return; // no cerrar ni borrar el trazo
         }
       }
 
@@ -261,7 +262,7 @@ export function LineaBusDialog({ open, onOpenChange, lineaBus }: LineaBusDialogP
             </form>
           </TabsContent>
 
-          <TabsContent value="trayecto" className="mt-4">
+          <TabsContent value="trayecto" forceMount className="mt-4 data-[state=inactive]:hidden">
             <div className="space-y-4">
               <div className="bg-muted/50 p-4 rounded-lg">
                 <h4 className="font-medium mb-2">Instrucciones:</h4>
